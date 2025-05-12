@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "ADOFAI-Macro (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "ADOFAI-Macro (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

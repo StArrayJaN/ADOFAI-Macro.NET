@@ -1,0 +1,109 @@
+﻿<Window
+    x:Class="ADOFAI_Macro.Source.Views.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+    
+    <Grid Name="MainGrid">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>  <!-- 0: 菜单栏 -->
+            <RowDefinition Height="*"/>     <!-- 1: 内容区 -->
+            <RowDefinition Height="Auto"/>  <!-- 2: 输入区 -->
+            <RowDefinition Height="Auto"/>  <!-- 3: 底部按钮 -->
+            <RowDefinition Height="Auto"/>   <!-- 4: 异常显示 -->
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- 菜单栏 -->
+        <MenuBar Grid.Row="0" Grid.ColumnSpan="2">
+            <MenuBarItem Title="文件">
+                <MenuFlyoutItem 
+                    Text="打开..." 
+                    Click="OpenFileItem_Click"/>
+                <MenuFlyoutItem 
+                    Text="打开上次..." 
+                    Click="OpenLastFileItem_Click"/>
+                <MenuFlyoutSeparator/>
+                <MenuFlyoutItem 
+                    Text="退出" 
+                    Click="ExitMenuItem_Click"/>
+            </MenuBarItem>
+        </MenuBar>
+       
+        <!-- 内容区域 -->
+        <ScrollViewer 
+            Grid.Row="1" 
+            Grid.ColumnSpan="2"
+            Margin="12,5"
+            VerticalScrollBarVisibility="Auto"
+            HorizontalScrollBarVisibility="Auto">
+            <TextBox
+                x:Name="ContentTextBox"
+                TextWrapping="Wrap"
+                AcceptsReturn="True"
+                IsReadOnly="True"
+                FontFamily="Consolas"
+                BorderThickness="0"/>
+        </ScrollViewer>
+        
+        <TextBox
+            Grid.Row="2"
+            Grid.Column="0"
+            Margin="12,5"
+            PlaceholderText="请输入键位..."
+            VerticalAlignment="Center"
+            Name="Keys"
+            HorizontalAlignment="Stretch"/>
+
+        <CheckBox
+            Grid.Row="2"
+            Grid.Column="1"
+            Margin="12"
+            Content="启用控制台输出"
+            Name="CheckBox"/>
+        
+        <!-- 底部按钮 -->
+        <Button 
+            Grid.Row="2"
+            Grid.Column="2"
+            x:Name="StartButton"
+            Content="运行"
+            Margin="12,12"
+            Click="Start_Click"
+            IsEnabled="False"
+            CornerRadius="4"
+            HorizontalAlignment="Right">
+            <Button.Resources>
+                <Style TargetType="Button">
+                    <Setter Property="Background" Value="#FF0078D4"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Style>
+            </Button.Resources>
+        </Button>
+        <Grid Grid.Row="4" Grid.ColumnSpan="2" 
+              Background="#10FF0000" 
+              Name="ExceptionGrid"
+              Visibility="Collapsed"
+              Margin="12">
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <TextBox x:Name="ExceptionTextBox"
+                         IsReadOnly="True"
+                         FontFamily="Consolas"
+                         Foreground="Red"
+                         Background="Transparent"
+                         TextWrapping="Wrap"
+                         AcceptsReturn="True"
+                         BorderThickness="0"
+                         Padding="5"
+                         FontSize="12"/>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</Window>
