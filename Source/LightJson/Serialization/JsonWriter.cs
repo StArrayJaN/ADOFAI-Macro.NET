@@ -63,7 +63,11 @@ namespace LightJson.Serialization
 		/// </param>
 		public JsonWriter(TextWriter innerWriter, bool pretty)
 		{
-			if (pretty)
+            IndentString = string.Empty;
+			SpacingString = string.Empty;
+			NewLineString = string.Empty;
+
+            if (pretty)
 			{
 				this.IndentString = "\t";
 				this.SpacingString = " ";
@@ -95,7 +99,7 @@ namespace LightJson.Serialization
 					break;
 
 				case JsonValueType.Boolean:
-					Write(value.AsString);
+					Write(value.AsString ?? string.Empty);
 					break;
 
 				case JsonValueType.Number:
@@ -112,11 +116,11 @@ namespace LightJson.Serialization
 					break;
 
 				case JsonValueType.Object:
-					Write(string.Format("JsonObject[{0}]", value.AsJsonObject.Count));
+					Write(string.Format("JsonObject[{0}]", value.AsJsonObject?.Count));
 					break;
 
 				case JsonValueType.Array:
-					Write(string.Format("JsonArray[{0}]", value.AsJsonArray.Count));
+					Write(string.Format("JsonArray[{0}]", value.AsJsonArray?.Count));
 					break;
 
 				default:

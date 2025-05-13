@@ -53,7 +53,8 @@ public class Command : IDisposable
         Console.WriteLine(format, args);
     }
 
-    public string ReadLine()
+    // TODO: 可能需要处理null
+    public string? ReadLine()
     {
         return Console.ReadLine();
     }

@@ -18,15 +18,17 @@ using Microsoft.UI.Xaml.Input;
 using WinRT;
 using WinRT.Interop;
 using RoutedEventArgs = Microsoft.UI.Xaml.RoutedEventArgs;
+using Microsoft.Windows.ApplicationModel.Resources;
 
 namespace ADOFAI_Macro.Source.Views
 {
     public sealed partial class MainWindow : Window
     {
+        private readonly static ResourceLoader _resourceLoader = new();
         private GlobalKeyboardListener _keyboardListener = new();
         private ADOFAI _adofai = new();
         private string _filePath = "";
-        private LevelUtils.StartMacro _macro;
+        private LevelUtils.StartMacro? _macro;
         public MainWindow()
         {
             InitializeComponent();
@@ -123,26 +125,33 @@ namespace ADOFAI_Macro.Source.Views
             Application.Current.Exit();
         }
 
-        private void Start_Click(object sender, RoutedEventArgs e)
+        // 开始按钮点击事件
+        private async void Start_Click(object sender, RoutedEventArgs e)
         {
+            // 如果没有选择文件，弹出提示
             if (_filePath.Length == 0)
             {
-                ShowMessage("错误", "请选择文件");
+                await ShowMessage(_resourceLoader.GetString("MainWindow_ErrorMessageTitle"), _resourceLoader.GetString("MainWindow_NullFileMessage"));
                 return;
             }
-            if (string.IsNullOrEmpty(Keys.Text))
+            // 如果没有输入键位，弹出提示
+            if (string.IsNullOrWhiteSpace(Keys.Text))
             {
-                ShowMessage("错误", "请输入键位");
+                await ShowMessage(_resourceLoader.GetString("MainWindow_ErrorMessageTitle"), _resourceLoader.GetString("MainWindow_NullKeysMessage"));
                 return;
             }
 
+            // 初始化关卡
             ADOFAI.Level level = _adofai.InitLevel(_filePath);
             Process process = _adofai.FindOrRunProcess();
+
             _macro?._command?.Clear();
-            if (!CheckBox.IsChecked.Value) _macro?._command?.Dispose(); 
+
+            if (CheckBox.IsChecked is bool isChecked && !isChecked) _macro?._command?.Dispose(); 
             AppData.instance.Write("keyList", Keys.Text);
-            _macro = new LevelUtils.StartMacro(Keys.Text.ToCharArray().Select(KeyCodeConverter.GetKeyCode).ToList(), LevelUtils.GetNoteTimes(level),CheckBox.IsChecked.Value);
-            Toast("ADOFAI-Macro", $"已就绪,键位数：{Keys.Text.ToCharArray().Select(KeyCodeConverter.GetKeyCode).ToList().Count}");
+            _macro = new LevelUtils.StartMacro(Keys.Text.ToCharArray().Select(KeyCodeConverter.GetKeyCode).ToList(), LevelUtils.GetNoteTimes(level), CheckBox.IsChecked ?? false);
+            Toast("ADOFAI-Macro", $"{_resourceLoader.GetString("MainWindow_ReadyMessage")}: {Keys.Text.ToCharArray().Select(KeyCodeConverter.GetKeyCode).ToList().Count}");
+
             WindowsNative.SwitchToThisWindow(process.MainWindowHandle);
         }
         
@@ -160,13 +169,13 @@ namespace ADOFAI_Macro.Source.Views
         private string GetString()
         {
             StringBuilder stringBuilder = new();
-            stringBuilder.AppendLine($"当前文件:{_filePath}");
-            stringBuilder.AppendLine("点击下方按钮运行，之后会自动切换到游戏窗口");
-            stringBuilder.AppendLine("播放后，在第一个轨道按W开始，按←和→可以调整偏移");
-            stringBuilder.AppendLine("按Esc停止,停止之后可以按W重新开始");
-            stringBuilder.AppendLine("你可以再次选择文件来切换关卡");
-            stringBuilder.AppendLine("启用控制台输出可能会导致性能下降");
-            stringBuilder.AppendLine("按Ctrl+C或右上角退出程序");
+            stringBuilder.AppendLine(value: $"{_resourceLoader.GetString("MainWindow_CurrentFileMessage")}: {_filePath}");
+            stringBuilder.AppendLine(value: $"{_resourceLoader.GetString("MainWindow_RunTipMessage0")}");
+            stringBuilder.AppendLine(value: $"{_resourceLoader.GetString("MainWindow_RunTipMessage1")}");
+            stringBuilder.AppendLine(value: $"{_resourceLoader.GetString("MainWindow_RunTipMessage2")}");
+            stringBuilder.AppendLine(value: $"{_resourceLoader.GetString("MainWindow_RunTipMessage3")}");
+            stringBuilder.AppendLine(value: $"{_resourceLoader.GetString("MainWindow_RunTipMessage4")}");
+            stringBuilder.AppendLine(value: $"{_resourceLoader.GetString("MainWindow_RunTipMessage5")}");
             return stringBuilder.ToString();
         }
 

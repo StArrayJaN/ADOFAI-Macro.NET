@@ -2,6 +2,7 @@
 using Windows.System;
 using LightJson;
 using Window = ABI.Microsoft.UI.Xaml.Window;
+using Microsoft.Windows.ApplicationModel.Resources;
 
 namespace ADOFAI_Macro.Source.Utils;
 
@@ -20,14 +21,18 @@ public class LevelUtils
                 if (l.HasEvent(i, "SetSpeed"))
                 {
                     int index = l.GetEventIndex(i, "SetSpeed");
-                    JsonObject a = levelEvents[index].AsJsonObject;
-                    a["floor"] = a["floor"].AsInteger + 1;
+                    JsonObject? a = levelEvents[index].AsJsonObject;
+                    if (a != null) {
+                        a["floor"] = a["floor"].AsInteger + 1; 
+                    }
                 }
                 else if (l.HasEvent(i, "Twirl"))
                 {
                     int index = l.GetEventIndex(i, "Twirl");
-                    JsonObject a = levelEvents[index].AsJsonObject;
-                    a["floor"] = a["floor"].AsInteger + 1;
+                    JsonObject? a = levelEvents[index].AsJsonObject;
+                    if (a != null) {
+                        a["floor"] = a["floor"].AsInteger + 1;
+                    }
                 }
             }
         }
@@ -43,9 +48,11 @@ public class LevelUtils
             if (angleData == 999)
             {
                 midrCount++;
-                JsonObject temp = parsedChart[i - midrCount].AsJsonObject;
-                temp["midr"] = "true";
-                parsedChart[i - midrCount] = temp;
+                JsonObject? temp = parsedChart[i - midrCount].AsJsonObject;
+                if (temp != null) {
+                    temp["midr"] = "true";
+                    parsedChart[i - midrCount] = temp;
+                }
                 midrId.Add(i - 1);
             }
             else
@@ -75,54 +82,57 @@ public class LevelUtils
 
         double bpm = l.GetBPM();
         double pitch = l.GetPitch() / 100.0;
-        bool speedTypeIsBpm = true;
+
+        // TODO: 我看你没使用我就注释掉了qwq
+        //bool speedTypeIsBpm = true;
 
         // 处理事件数据
         foreach (JsonValue eventValue in levelEvents)
         {
-            JsonObject o = eventValue.AsJsonObject;
-            int tile = o["floor"].AsInteger;
-            string eventType = o["eventType"].AsString;
+            JsonObject? o = eventValue.AsJsonObject;
+            if (o != null) {
+                int tile = o["floor"].AsInteger;
+                string? eventType = o["eventType"].AsString;
 
-            // 调整tile索引
-            tile -= UpperBound(midrId.ToArray(), tile);
+                // 调整tile索引
+                tile -= UpperBound(midrId.ToArray(), tile);
 
-            JsonObject ob = parsedChart[tile].AsJsonObject;
+                var asJsonObject = parsedChart[tile].AsJsonObject;
+                if (asJsonObject != null) {
+                    JsonObject ob = asJsonObject;
 
-            switch (eventType)
-            {
-                case "SetSpeed":
-                    if (o["speedType"].AsString == "Multiplier")
-                    {
-                        bpm = o["bpmMultiplier"].AsNumber * bpm;
+                    switch (eventType) {
+                        case "SetSpeed":
+                            if (o["speedType"].AsString == "Multiplier") {
+                                bpm = o["bpmMultiplier"].AsNumber * bpm;
+                            }
+                            else if (o["speedType"].AsString == "Bpm") {
+                                bpm = o["beatsPerMinute"].AsNumber * pitch;
+                                //speedTypeIsBpm = true;
+                            }
+
+                            ob["bpm"] = bpm;
+                            break;
+
+                        case "Twirl":
+                            ob["direction"] = -1;
+                            break;
+
+                        case "Pause":
+                            ob["extraHold"] = o["duration"].AsNumber / 2.0;
+                            break;
+
+                        case "Hold":
+                            ob["extraHold"] = o["duration"].AsNumber;
+                            break;
+
+                        case "MultiPlanet":
+                            ob["MultiPlanet"] = o["planets"].AsString == "ThreePlanets" ? "1" : "0";
+                            break;
                     }
-                    else if (o["speedType"].AsString == "Bpm")
-                    {
-                        bpm = o["beatsPerMinute"].AsNumber * pitch;
-                        speedTypeIsBpm = true;
-                    }
-
-                    ob["bpm"] = bpm;
-                    break;
-
-                case "Twirl":
-                    ob["direction"] = -1;
-                    break;
-
-                case "Pause":
-                    ob["extraHold"] = o["duration"].AsNumber / 2.0;
-                    break;
-
-                case "Hold":
-                    ob["extraHold"] = o["duration"].AsNumber;
-                    break;
-
-                case "MultiPlanet":
-                    ob["MultiPlanet"] = o["planets"].AsString == "ThreePlanets" ? "1" : "0";
-                    break;
+                    parsedChart[tile] = ob;
+                }
             }
-
-            parsedChart[tile] = ob;
         }
 
 
@@ -132,24 +142,23 @@ public class LevelUtils
         // 应用全局设置
         for (int i = 0; i < parsedChart.Count; i++)
         {
-            JsonObject ob = parsedChart[i].AsJsonObject;
+            var asJsonObject = parsedChart[i].AsJsonObject;
+            if (asJsonObject != null) {
+                JsonObject ob = asJsonObject;
+                // 方向处理
+                if (ob["direction"].AsInteger == -1) {
+                    direction *= -1;
+                }
 
-            // 方向处理
-            if (ob["direction"].AsInteger == -1)
-            {
-                direction *= -1;
-            }
+                ob["direction"] = direction;
 
-            ob["direction"] = direction;
-
-            // BPM处理
-            if (ob["bpm"].AsString == "unSet")
-            {
-                ob["bpm"] = currentBPM;
-            }
-            else
-            {
-                currentBPM = ob["bpm"].AsNumber;
+                // BPM处理
+                if (ob["bpm"].AsString == "unSet") {
+                    ob["bpm"] = currentBPM;
+                }
+                else {
+                    currentBPM = ob["bpm"].AsNumber;
+                }
             }
         }
 
@@ -162,45 +171,46 @@ public class LevelUtils
 
         foreach (JsonValue chartValue in parsedChart)
         {
-            JsonObject o = chartValue.AsJsonObject;
-            curAngle = Fmod(curAngle - 180, 360);
-            double curBPM = o["bpm"].AsNumber;
-            double destAngle = o["angle"].AsNumber;
-
-            double pAngle = Math.Abs(destAngle - curAngle) <= 0.001
-                ? 360
-                : Fmod((curAngle - destAngle) * o["direction"].AsInteger, 360);
-
-            pAngle += o["extraHold"].AsNumber * 360;
-
-            // 三球处理逻辑
-            double angleTemp = pAngle;
-            if (isMultiPlanet)
+            var asJsonObject = chartValue.AsJsonObject;
+            if (asJsonObject != null) 
             {
-                pAngle = pAngle > 60 ? pAngle - 60 : pAngle + 300;
+                JsonObject o = asJsonObject;
+                curAngle = Fmod(curAngle - 180, 360);
+                double curBPM = o["bpm"].AsNumber;
+                double destAngle = o["angle"].AsNumber;
+
+                double pAngle = Math.Abs(destAngle - curAngle) <= 0.001
+                    ? 360
+                    : Fmod(( curAngle - destAngle ) * o["direction"].AsInteger, 360);
+
+                pAngle += o["extraHold"].AsNumber * 360;
+
+                // 三球处理逻辑
+                double angleTemp = pAngle;
+                if (isMultiPlanet) {
+                    pAngle = pAngle > 60 ? pAngle - 60 : pAngle + 300;
+                }
+
+                string? multiPlanet = o["MultiPlanet"].AsString;
+                if (multiPlanet != "-1") {
+                    isMultiPlanet = multiPlanet == "1";
+                    pAngle = isMultiPlanet
+                        ? ( pAngle > 60 ? pAngle - 60 : pAngle + 300 )
+                        : angleTemp;
+                }
+
+                // 计算时间
+                double deltaTime = AngleToTime(pAngle, curBPM);
+                curTime += deltaTime;
+
+                curAngle = destAngle;
+                if (o["midr"].AsString == "true") {
+                    curAngle += 180;
+                }
+
+                noteOffset.Add(deltaTime);
+                noteTime.Add(curTime);
             }
-
-            string multiPlanet = o["MultiPlanet"].AsString;
-            if (multiPlanet != "-1")
-            {
-                isMultiPlanet = multiPlanet == "1";
-                pAngle = isMultiPlanet
-                    ? (pAngle > 60 ? pAngle - 60 : pAngle + 300)
-                    : angleTemp;
-            }
-
-            // 计算时间
-            double deltaTime = AngleToTime(pAngle, curBPM);
-            curTime += deltaTime;
-
-            curAngle = destAngle;
-            if (o["midr"].AsString == "true")
-            {
-                curAngle += 180;
-            }
-
-            noteOffset.Add(deltaTime);
-            noteTime.Add(curTime);
         }
 
         return noteTime;
@@ -230,15 +240,16 @@ public class LevelUtils
 
     public class StartMacro
     {
+        private readonly static ResourceLoader _resourceLoader = new ResourceLoader();
         private readonly List<int> _keys;
         private readonly List<double> _noteTimes;
         private volatile bool _isRunning;
-        private Thread _workerThread;
+        private Thread? _workerThread;
         private int _keyIndex;
         private double _offset;
         private readonly Lock _syncLock = new Lock();
         private readonly List<double> intervals;
-        public readonly Command _command;
+        public readonly Command? _command;
 
         public double Offset
         {
@@ -279,7 +290,8 @@ public class LevelUtils
         public void Stop()
         {
             _isRunning = false;
-            if (_workerThread.IsAlive)
+            // TODO: 可能需要处理null
+            if (_workerThread != null && _workerThread.IsAlive)
             {
                 if (!_workerThread.Join(TimeSpan.FromSeconds(1))) // 等待1秒
                 {
@@ -329,10 +341,10 @@ public class LevelUtils
             {
                 if (keyIndex >= _keys.Count) keyIndex = 0;
                 int keyCode = _keys[keyIndex];
-                _command?.WriteLine($"当前按键:{KeyCodeConverter.GetKeyString(keyCode)}," +
-                                    $"BPM:{60000 / (_noteTimes[currentIndex] - _noteTimes[currentIndex - 1]):F4}," +
-                                    $"轨道数:{currentIndex}/{_noteTimes.Count -1}," +
-                                    $"偏移:{_offset}ms");
+                _command?.WriteLine($"{_resourceLoader.GetString("LevelUtils_CurrentKeyMessage")}: {KeyCodeConverter.GetKeyString(keyCode)}," +
+                                    $"{_resourceLoader.GetString("LevelUtils_BpmMessage")}: {60000 / (_noteTimes[currentIndex] - _noteTimes[currentIndex - 1]):F4}," +
+                                    $"{_resourceLoader.GetString("LevelUtils_NumberOfTilesMessage")}: {currentIndex}/{_noteTimes.Count -1}," +
+                                    $"{_resourceLoader.GetString("LevelUtils_MisalignmentMessage")}: {_offset}ms");
                 WindowsNative.PressKey(keyCode,intervals[currentIndex] - 5);
                 keyIndex++;
             }

@@ -13,13 +13,13 @@ namespace LightJson
 	public struct JsonValue
 	{
 		private readonly JsonValueType type;
-		private readonly object reference;
+		private readonly object? reference;
 		private readonly double value;
 
 		/// <summary>
 		/// Represents a null JsonValue.
 		/// </summary>
-		public static readonly JsonValue Null = new JsonValue(JsonValueType.Null, default(double), null);
+		public static readonly JsonValue Null = new JsonValue(JsonValueType.Null, default, null);
 
 		/// <summary>
 		/// Gets the type of this JsonValue.
@@ -134,16 +134,16 @@ namespace LightJson
 		{
 			get
 			{
-				switch (this.Type)
+				switch (Type)
 				{
 					case JsonValueType.Boolean:
-						return (this.value == 1);
+						return value == 1;
 
 					case JsonValueType.Number:
-						return (this.value != 0);
+						return value != 0;
 
 					case JsonValueType.String:
-						return ((string)this.reference != "");
+						return (string?)reference != "";
 
 					case JsonValueType.Object:
 					case JsonValueType.Array:
@@ -197,7 +197,7 @@ namespace LightJson
 
 					case JsonValueType.String:
 						double number;
-						if (double.TryParse((string)this.reference, out number))
+						if (double.TryParse((string?)this.reference, out number))
 						{
 							return number;
 						}
@@ -215,7 +215,7 @@ namespace LightJson
 		/// <summary>
 		/// Gets this value as a String type.
 		/// </summary>
-		public string AsString
+		public string? AsString
 		{
 			get
 			{
@@ -230,7 +230,7 @@ namespace LightJson
 						return this.value.ToString();
 
 					case JsonValueType.String:
-						return (string)this.reference;
+						return (string?)reference;
 
 					default:
 						return null;
@@ -241,12 +241,12 @@ namespace LightJson
 		/// <summary>
 		/// Gets this value as an JsonObject.
 		/// </summary>
-		public JsonObject AsJsonObject
+		public JsonObject? AsJsonObject
 		{
 			get
 			{
-				return (this.IsJsonObject)
-					? (JsonObject)this.reference
+				return (IsJsonObject)
+					? (JsonObject?)reference
 					: null;
 			}
 		}
@@ -254,12 +254,12 @@ namespace LightJson
 		/// <summary>
 		/// Gets this value as an JsonArray.
 		/// </summary>
-		public JsonArray AsJsonArray
+		public JsonArray? AsJsonArray
 		{
 			get
 			{
 				return (this.IsJsonArray)
-					? (JsonArray)this.reference
+					? (JsonArray?)reference
 					: null;
 			}
 		}
@@ -271,7 +271,7 @@ namespace LightJson
 		{
 			get
 			{
-				if (this.IsString && DateTime.TryParse((string)this.reference, out DateTime value))
+				if (IsString && reference != null && DateTime.TryParse((string)reference, out DateTime value))
 				{
 					return value;
 				}
@@ -285,7 +285,7 @@ namespace LightJson
 		/// <summary>
 		/// Gets this (inner) value as a System.object.
 		/// </summary>
-		public object AsObject
+		public object? AsObject
 		{
 			get
 			{
@@ -317,24 +317,24 @@ namespace LightJson
 		{
 			get
 			{
-				if (this.IsJsonObject)
+				if (this.IsJsonObject && reference != null)
 				{
-					return ((JsonObject)this.reference)[key];
+					return ((JsonObject)reference)[key];
 				}
 				else
 				{
-					throw new InvalidOperationException("This value does not represent a JsonObject.");
+					throw new InvalidOperationException("This value does not represent a JsonObject or reference is null.");
 				}
 			}
 			set
 			{
-				if (this.IsJsonObject)
+				if (this.IsJsonObject && reference != null)
 				{
 					((JsonObject)this.reference)[key] = value;
 				}
 				else
 				{
-					throw new InvalidOperationException("This value does not represent a JsonObject.");
+					throw new InvalidOperationException("This value does not represent a JsonObject or reference is null.");
 				}
 			}
 		}
@@ -343,31 +343,31 @@ namespace LightJson
 		/// Gets or sets the value at the specified index.
 		/// </summary>
 		/// <param name="index">The zero-based index of the value to get or set.</param>
-		/// <exception cref="System.InvalidOperationException">
+		/// <exception cref="InvalidOperationException">
 		/// Thrown when this JsonValue is not a JsonArray
 		/// </exception>
 		public JsonValue this[int index]
 		{
 			get
 			{
-				if (this.IsJsonArray)
+				if (this.IsJsonArray && reference != null)
 				{
 					return ((JsonArray)this.reference)[index];
 				}
 				else
 				{
-					throw new InvalidOperationException("This value does not represent a JsonArray.");
+					throw new InvalidOperationException("This value does not represent a JsonArray or reference is null.");
 				}
 			}
 			set
 			{
-				if (this.IsJsonArray)
+				if (this.IsJsonArray && reference != null)
 				{
 					((JsonArray)this.reference)[index] = value;
 				}
 				else
 				{
-					throw new InvalidOperationException("This value does not represent a JsonArray.");
+					throw new InvalidOperationException("This value does not represent a JsonArray or reference is null.");
 				}
 			}
 		}
@@ -384,7 +384,7 @@ namespace LightJson
 		/// The internal value reference of the JsonValue.
 		/// This value is used when the Json type is String, JsonObject, or JsonArray.
 		/// </param>
-		private JsonValue(JsonValueType type, double value, object reference)
+		private JsonValue(JsonValueType type, double value, object? reference)
 		{
 			this.type      = type;
 			this.value     = value;
@@ -668,13 +668,15 @@ namespace LightJson
 		/// <param name="jsonValue">The JsonValue to be converted.</param>
 		public static implicit operator string(JsonValue jsonValue)
 		{
-			if (jsonValue.IsString || jsonValue.IsNull)
+			var referenceString = jsonValue.reference as string;
+
+            if (referenceString != null && (jsonValue.IsString || jsonValue.IsNull))
 			{
-				return jsonValue.reference as string;
+				return referenceString;
 			}
 			else
 			{
-				return null;
+				return string.Empty;
 			}
 		}
 
@@ -684,14 +686,16 @@ namespace LightJson
 		/// <param name="jsonValue">The JsonValue to be converted.</param>
 		public static implicit operator JsonObject(JsonValue jsonValue)
 		{
-			if (jsonValue.IsJsonObject || jsonValue.IsNull)
+            var referenceJsonObject = jsonValue.reference as JsonObject;
+
+            if (referenceJsonObject != null && (jsonValue.IsJsonObject || jsonValue.IsNull))
 			{
-				return jsonValue.reference as JsonObject;
+				return referenceJsonObject;
 			}
 			else
 			{
-				return null;
-			}
+				return new();
+            }
 		}
 
 		/// <summary>
@@ -700,14 +704,16 @@ namespace LightJson
 		/// <param name="jsonValue">The JsonValue to be converted.</param>
 		public static implicit operator JsonArray(JsonValue jsonValue)
 		{
-			if (jsonValue.IsJsonArray || jsonValue.IsNull)
+			var referenceJsonJsonArray = jsonValue.reference as JsonArray;
+
+            if (referenceJsonJsonArray != null && (jsonValue.IsJsonArray || jsonValue.IsNull))
 			{
-				return jsonValue.reference as JsonArray;
+				return referenceJsonJsonArray;
 			}
 			else
 			{
-				return null;
-			}
+				return new();
+            }
 		}
 
 		/// <summary>
@@ -779,7 +785,7 @@ namespace LightJson
 		/// Returns a value indicating whether this JsonValue is equal to the given object.
 		/// </summary>
 		/// <param name="obj">The object to test.</param>
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			if (obj is null)
 			{
@@ -809,11 +815,15 @@ namespace LightJson
 			}
 			else
 			{
-				return this.Type.GetHashCode()
-					^ this.value.GetHashCode()
-					^ EqualityComparer<object>.Default.GetHashCode(this.reference);
-			}
-		}
+				var hashCode = this.Type.GetHashCode()
+					^ this.value.GetHashCode();
+				if (reference != null)
+				{
+                    hashCode ^= EqualityComparer<object>.Default.GetHashCode(reference);
+                }
+				return hashCode;
+            }
+        }
 
 		/// <summary>
 		/// Returns a JSON string representing the state of the object.
@@ -851,13 +861,13 @@ namespace LightJson
 			{
 				get
 				{
-					if (jsonValue.IsJsonObject)
+					if (jsonValue.IsJsonObject && jsonValue.reference != null)
 					{
 						return (JsonObject)jsonValue.reference;
 					}
 					else
 					{
-						return null;
+						return new();
 					}
 				}
 			}
@@ -867,13 +877,13 @@ namespace LightJson
 			{
 				get
 				{
-					if (jsonValue.IsJsonArray)
+					if (jsonValue.IsJsonArray && jsonValue.reference != null)
 					{
 						return (JsonArray)jsonValue.reference;
 					}
 					else
 					{
-						return null;
+						return new();
 					}
 				}
 			}
@@ -890,11 +900,11 @@ namespace LightJson
 			{
 				get
 				{
-					if (jsonValue.IsJsonObject)
+					if (jsonValue.IsJsonObject && jsonValue.reference != null)
 					{
 						return (JsonObject)jsonValue.reference;
 					}
-					else if (jsonValue.IsJsonArray)
+					else if (jsonValue.IsJsonArray && jsonValue.reference != null)
 					{
 						return (JsonArray)jsonValue.reference;
 					}

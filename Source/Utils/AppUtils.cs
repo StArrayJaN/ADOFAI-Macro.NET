@@ -21,7 +21,9 @@ public class AppUtils
     {
         return ((Stopwatch.GetTimestamp() - startingTimestamp) * tickToNanoseconds);
     }
-    public static string GetResourcePath()
+
+    // TODO: 可能需要处理null
+    public static string? GetResourcePath()
     {
         DirectoryInfo dir = new DirectoryInfo(Directory.GetCurrentDirectory());
         string[] dirNames = dir.GetDirectories().Select(x => x.ToString()).ToArray();
@@ -32,7 +34,11 @@ public class AppUtils
                 return dirNames[i];
             }
         }
-        dirNames = dir.Parent.GetDirectories().Select(x => x.ToString()).ToArray();
+        // TODO: 可能需要处理null
+        if (dir.Parent != null)
+        {
+            dirNames = dir.Parent.GetDirectories().Select(x => x.ToString()).ToArray();
+        }
         for (int i = 0; i < dirNames.Length; i++)
         {
             if (dirNames[i].Contains("resource"))
