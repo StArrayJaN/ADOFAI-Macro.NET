@@ -13,7 +13,8 @@ public class ADOFAI
 {
     public ADOFAI()
     {
-        installDir = SteamPath.SteamPath.Find("977950");
+        // TODO: 如果需要向用户显示信息就把这个删掉，不需要就把注释删掉
+        installDir = SteamPath.SteamPath.Find("977950") ?? string.Empty;
         string name = new DirectoryInfo(installDir).Name;
         exePath = $"{installDir}\\{name}.exe";
         mainDll = Assembly.LoadFrom($"{installDir}\\{name}_Data\\Managed\\Assembly-CSharp.dll");
@@ -25,11 +26,11 @@ public class ADOFAI
 
     public Assembly mainDll { get; private set; }
 
-    public JsonObject levelJson { get; private set; }
+    public JsonObject? levelJson { get; private set; }
 
-    public MethodBase GetMethod(string className, string methodName, params Type[] parameterTypes)
+    public MethodBase? GetMethod(string className, string methodName, params Type[] parameterTypes)
     {
-        return mainDll.GetType(className).GetMethod(methodName,
+        return mainDll.GetType(className)?.GetMethod(methodName,
             BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public, null,
             parameterTypes, null);
     }
@@ -120,13 +121,13 @@ public class ADOFAI
         {
             if (json.ContainsKey("angleData"))
             {
-                return json["angleData"].AsJsonArray.Select(x => x.AsNumber).ToList();
+                return json["angleData"].AsJsonArray?.Select(x => x.AsNumber).ToList() ?? new();
             }
             return json["pathData"]
-                    .AsString
+                    .AsString?
                     .ToCharArray()
                     .Select(c => TileAngle.AngleCharMap[c].Angle)
-                    .ToList();
+                    .ToList() ?? new();
         }
 
         public JsonObject? GetEvent(int floor,string eventName)
@@ -206,8 +207,14 @@ public class ADOFAI
                 {
                     if (field.FieldType == typeof(TileAngle))
                     {
-                        var tileAngle = (TileAngle)field.GetValue(null);
-                        AngleCharMap[tileAngle.CharCode] = tileAngle;
+                        var tileAngle = (TileAngle?)field.GetValue(null);
+
+                        // TODO: 可能需要处理null
+                        if (tileAngle != null)
+                        {
+                            AngleCharMap[tileAngle.CharCode] = tileAngle;
+                        }
+                        
                     }
                 }
             }

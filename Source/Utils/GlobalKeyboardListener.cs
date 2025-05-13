@@ -36,7 +36,8 @@ namespace ADOFAI_Macro.Source.Utils
         private LowLevelKeyboardProc _proc;
         private bool _listenAllKeys = false;
         private VirtualKey? _specificKey = null;
-        private Action<VirtualKey> _keyboardCallback;
+        // TODO: 可能需要处理null
+        private Action<VirtualKey>? _keyboardCallback;
         private Dictionary<VirtualKey, Action> _combinationCallbacks = new Dictionary<VirtualKey, Action>();
         private HashSet<VirtualKey> _currentlyPressedKeys = new HashSet<VirtualKey>();
 
@@ -112,7 +113,11 @@ namespace ADOFAI_Macro.Source.Utils
             using (var curProcess = System.Diagnostics.Process.GetCurrentProcess())
             using (var curModule = curProcess.MainModule)
             {
-                return SetWindowsHookEx(WH_KEYBOARD_LL, proc, GetModuleHandle(curModule.ModuleName), 0);
+                // TODO: 我也不知道null咋搞就返回了个默认值，记得改QAQ
+                if (curModule != null) {
+                    return SetWindowsHookEx(WH_KEYBOARD_LL, proc, GetModuleHandle(curModule.ModuleName), 0);
+                }
+                return default;
             }
         }
 
@@ -154,8 +159,10 @@ namespace ADOFAI_Macro.Source.Utils
 
                 // If no combination was pressed, check for single keys
                 if ((wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) && 
-                    (_listenAllKeys || (_specificKey.HasValue && key == _specificKey.Value)))
+                    (_listenAllKeys || (_specificKey.HasValue && key == _specificKey.Value)) &&
+                    _keyboardCallback != null)
                 {
+                    // TODO: 可能需要处理null
                     _keyboardCallback.Invoke(key);
                 }
             }

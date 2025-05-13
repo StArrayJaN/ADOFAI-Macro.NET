@@ -5,6 +5,7 @@ using Windows.System;
 using ABI.System.Numerics;
 using ABI.Windows.UI.WindowManagement;
 using Timer = System.Timers.Timer;
+using Microsoft.Windows.ApplicationModel.Resources;
 
 namespace ADOFAI_Macro.Source.Utils;
 
@@ -37,7 +38,9 @@ public class WindowsNative
     // 窗口消息常量
     private const uint WM_SYSCOMMAND = 0x0112;
     private const uint SC_RESTORE = 0xF120;
-    
+
+    private readonly static ResourceLoader _resourceLoader = new();
+
     /// <summary>
     /// 设置窗体为TopMost
     /// </summary>
@@ -60,7 +63,7 @@ public class WindowsNative
         // 获取当前窗口位置
         if (!GetWindowRect(hWnd, out RECT rect))
         {
-            Console.WriteLine("获取窗口矩形失败");
+            Console.WriteLine(_resourceLoader.GetString("WindowsNative_GetWindowRectangleFailureMessage"));
             return false;
         }
 

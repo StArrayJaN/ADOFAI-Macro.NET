@@ -32,12 +32,17 @@ public class AppData
 
     public void Write(string key,object val)
     {
-        dataMap[key] = val.ToString();
+        var valString = val.ToString();
+        if (valString != null) 
+        {
+            dataMap[key] = valString;
+        }
         Save();
     }
 
     public string Read(string key, string def)
     {
+        // TODO: 可能需要处理null
         if (dataMap.ContainsKey(key))
         {
             return dataMap[key];
