@@ -1,3 +1,5 @@
+using Microsoft.Windows.Globalization;
+
 namespace ADOFAI_Macro
 {
     /// <summary>

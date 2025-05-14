@@ -169,8 +169,12 @@
     <value>启用控制台输出可能会导致性能下降</value>
   </data>
   <data name="MainWindow_RunTipMessage5" xml:space="preserve">
+    <value>控制台中显示的轨道数是删除了中旋的</value>
+  </data>
+  <data name="MainWindow_RunTipMessage6" xml:space="preserve">
     <value>按 Ctrl+C 或右上角退出程序</value>
   </data>
+  
   <data name="LevelUtils_CurrentKeyMessage" xml:space="preserve">
     <value>当前按键</value>
   </data>

@@ -61,7 +61,10 @@ public class Command : IDisposable
 
     public void Clear()
     {
-        Console.Clear();
+        try
+        {
+            Console.Clear();
+        } catch(IOException){}
     }
 
     public void Dispose()

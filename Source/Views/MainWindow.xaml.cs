@@ -23,14 +23,20 @@ namespace ADOFAI_Macro.Source.Views
 
         public MainWindow()
         {
+            Thread.CurrentThread.Name = "Main";
             InitializeComponent();
             ChangeOpenLastMenuItem();
             Title = "ADOFAI-Macro";
+#if DEBUG
+            AppUtils.LogInfo($"{Title}已启动,窗口大小:X:{800},Y:{600}");
+#endif
+            AppUtils.Log.AutoLogException();
             Application.Current.UnhandledException += UnhandledException;
-            AppWindow.Resize(new(550, 400));
+            AppWindow.Resize(new(800, 600));
             StartListenKeyboard();
             Keys.Text = AppData.instance.Read("keyList", "123456");
         }
+
         void StartListenKeyboard()
         {
             _keyboardListener.ListenKeyCombination(VirtualKey.Control, VirtualKey.C, delegate
@@ -57,18 +63,17 @@ namespace ADOFAI_Macro.Source.Views
                         break;
                 }
             });
+#if DEBUG
+            AppUtils.LogInfo("正在监听所有按键");
+#endif
         }
-
-        /*void StopListenKeyboard()
-        {
-            _keyboardListener.Unhook();
-        }*/
 
         async void UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
         {
             Exception ex = e.Exception;
             e.Handled = true;
             ExceptionTextBox.Text = ex.ToString();
+            AppUtils.LogError("发生错误:", ex.ToString());
             ExceptionGrid.Visibility = Visibility.Visible;
             await Task.Delay(10000);
             ExceptionGrid.Visibility = Visibility.Collapsed;
@@ -107,6 +112,9 @@ namespace ADOFAI_Macro.Source.Views
             if (file != null)
             {
                 _filePath = file.Path;
+#if DEBUG
+                AppUtils.LogInfo($"选择文件:{file.Path}");
+#endif
                 AppData.instance.Write("lastFile", file.Path);
                 ContentTextBox.Text = GetString();
                 StartButton.IsEnabled = true;
@@ -148,6 +156,9 @@ namespace ADOFAI_Macro.Source.Views
                 LevelUtils.GetNoteTimes(level), CheckBox.IsChecked ?? false);
             Toast("ADOFAI-Macro",
                 $"{_resourceLoader.GetString("MainWindow_ReadyMessage")}: {Keys.Text.ToCharArray().Select(KeyCodeConverter.GetKeyCode).ToList().Count}");
+#if DEBUG
+            AppUtils.LogInfo("启动宏，键位:" + Keys.Text);
+#endif
             WindowsNative.SwitchToThisWindow(process.MainWindowHandle);
         }
 
@@ -160,6 +171,7 @@ namespace ADOFAI_Macro.Source.Views
                 StartButton.IsEnabled = true;
             }
         }
+
         #endregion
 
         private string GetString()
@@ -173,6 +185,7 @@ namespace ADOFAI_Macro.Source.Views
             stringBuilder.AppendLine(value: $"{_resourceLoader.GetString("MainWindow_RunTipMessage3")}");
             stringBuilder.AppendLine(value: $"{_resourceLoader.GetString("MainWindow_RunTipMessage4")}");
             stringBuilder.AppendLine(value: $"{_resourceLoader.GetString("MainWindow_RunTipMessage5")}");
+            stringBuilder.AppendLine(value: $"{_resourceLoader.GetString("MainWindow_RunTipMessage6")}");
             return stringBuilder.ToString();
         }
 

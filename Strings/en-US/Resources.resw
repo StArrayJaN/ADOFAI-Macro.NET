@@ -169,6 +169,9 @@
     <value>Enabling console output may cause performance degradation</value>
   </data>
   <data name="MainWindow_RunTipMessage5" xml:space="preserve">
+    <value>The vertical track displayed in the console has removed midSpin</value>
+  </data>
+  <data name="MainWindow_RunTipMessage6" xml:space="preserve">
     <value>Press Ctrl+C or the upper right corner to exit the program</value>
   </data>
   <data name="LevelUtils_CurrentKeyMessage" xml:space="preserve">
