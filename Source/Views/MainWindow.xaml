@@ -32,6 +32,7 @@
                                 Text="打开..." />
                 <MenuFlyoutItem x:Uid="MainWindow_OpenLastFileMenuFlyoutItem"
                                 Click="OpenLastFileItem_Click"
+                                Name="OpenLast"
                                 Text="打开上次..." />
                 <MenuFlyoutSeparator />
                 <MenuFlyoutItem x:Uid="MainWindow_OpenExitMenuFlyoutItem"

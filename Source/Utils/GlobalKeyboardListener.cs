@@ -38,8 +38,7 @@ namespace ADOFAI_Macro.Source.Utils
         private VirtualKey? _specificKey = null;
         // TODO: 可能需要处理null
         private Action<VirtualKey>? _keyboardCallback;
-        private Dictionary<VirtualKey, Action> _combinationCallbacks = new Dictionary<VirtualKey, Action>();
-        private HashSet<VirtualKey> _currentlyPressedKeys = new HashSet<VirtualKey>();
+        private Dictionary<VirtualKey, Action> _combinationCallbacks = new ();
 
         /// <summary>
         /// Initializes a new instance of the GlobalKeyboardListener
@@ -132,16 +131,6 @@ namespace ADOFAI_Macro.Source.Utils
             {
                 int vkCode = Marshal.ReadInt32(lParam);
                 VirtualKey key = (VirtualKey)vkCode;
-
-                // Update currently pressed keys set
-                if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)
-                {
-                    _currentlyPressedKeys.Add(key);
-                }
-                else if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP)
-                {
-                    _currentlyPressedKeys.Remove(key);
-                }
 
                 // Check for key combinations first (higher priority)
                 if ((wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) && _combinationCallbacks.ContainsKey(key))

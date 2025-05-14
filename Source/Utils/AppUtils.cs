@@ -61,4 +61,9 @@ public class AppUtils
     {
         return GetNanoseconds() / 1_000_000.0;
     }
+
+    public static double Max(double num, double num2)
+    {
+        return num > num2 ? num2 : num;
+    }
 }

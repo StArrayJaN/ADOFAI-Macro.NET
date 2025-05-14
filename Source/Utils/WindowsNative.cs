@@ -1,10 +1,5 @@
 ﻿using System.Runtime.InteropServices;
-using System.Text;
-using Windows.Foundation;
 using Windows.System;
-using ABI.System.Numerics;
-using ABI.Windows.UI.WindowManagement;
-using Timer = System.Timers.Timer;
 using Microsoft.Windows.ApplicationModel.Resources;
 
 namespace ADOFAI_Macro.Source.Utils;
@@ -19,12 +14,6 @@ public class WindowsNative
     public static extern void keybd_event(int key, byte scan, uint flags, nint extraInfo);
     [DllImport("user32.dll")]
     public static extern IntPtr SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, uint wFlags);
-    [DllImport("user32.dll")]　　
-    public static extern bool GetWindowRect(IntPtr hWnd, out WindowRect lpRect);
-    
-    // 导入必要的Win32 API函数
-    [DllImport("user32.dll", SetLastError = true)]
-    private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
@@ -47,9 +36,8 @@ public class WindowsNative
     /// <param name="hWnd"></param>
     public static void SetTopMost(IntPtr hWnd)
     {
-        WindowRect rect = new WindowRect();
-        GetWindowRect(hWnd, out rect);
-        SetWindowPos(hWnd, HWND_TOPMOST, rect.Left, rect.Top, rect.Right - rect.Left, rect.Bottom - rect.Top, 0);
+        GetWindowRect(hWnd, out RECT rect);
+        SetWindowPos(hWnd, HWND_TOPMOST, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, 0);
     }
     
     /// <summary>
@@ -97,14 +85,7 @@ public class WindowsNative
     public const int HWND_BOTTOM = 1;
     public const int HWND_TOPMOST = -1;
     public const int HWND_NOTOPMOST = -2;
-    
-    public struct WindowRect
-    {
-        public int Left;
-        public int Top;
-        public int Right;
-        public int Bottom;
-    }
+
     [StructLayout(LayoutKind.Sequential)]
     public struct POINT
     {

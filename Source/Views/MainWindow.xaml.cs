@@ -1,52 +1,50 @@
 // MainWindow.xaml.cs
 
 using System.Diagnostics;
-using System.Drawing;
-using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
-using System.Windows;
-using Windows.Foundation;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.System;
-using ABI.Microsoft.UI.Xaml.Documents;
-using ABI.Windows.UI.Notifications;
 using ADOFAI_Macro.Source.Utils;
 using Microsoft.Toolkit.Uwp.Notifications;
-using Microsoft.UI.Xaml.Input;
-using WinRT;
 using WinRT.Interop;
 using RoutedEventArgs = Microsoft.UI.Xaml.RoutedEventArgs;
 using Microsoft.Windows.ApplicationModel.Resources;
 
 namespace ADOFAI_Macro.Source.Views
 {
-    public sealed partial class MainWindow : Window
+    public sealed partial class MainWindow
     {
-        private readonly static ResourceLoader _resourceLoader = new();
+        private static readonly ResourceLoader _resourceLoader = new();
         private GlobalKeyboardListener _keyboardListener = new();
         private ADOFAI _adofai = new();
         private string _filePath = "";
         private LevelUtils.StartMacro? _macro;
+
         public MainWindow()
         {
             InitializeComponent();
+            ChangeOpenLastMenuItem();
             Title = "ADOFAI-Macro";
             Application.Current.UnhandledException += UnhandledException;
-            _keyboardListener.ListenKeyCombination(VirtualKey.Control,VirtualKey.C, delegate
+            AppWindow.Resize(new(550, 400));
+            StartListenKeyboard();
+            Keys.Text = AppData.instance.Read("keyList", "123456");
+        }
+        void StartListenKeyboard()
+        {
+            _keyboardListener.ListenKeyCombination(VirtualKey.Control, VirtualKey.C, delegate
             {
                 if (IsCurrentWindowActive()) Application.Current.Exit();
             });
-            AppWindow.Resize(new (550,400));
             _keyboardListener.ListenAllKeys(key =>
             {
                 if (_macro == null) return;
                 switch (key)
                 {
-                    case VirtualKey.W :
+                    case VirtualKey.W:
                         _macro.Offset = 0;
-                        _macro.Start();
+                        if (_adofai.IsWindowActive()) _macro.Start();
                         break;
                     case VirtualKey.Left:
                         _macro.Offset -= 2;
@@ -59,9 +57,14 @@ namespace ADOFAI_Macro.Source.Views
                         break;
                 }
             });
-            Keys.Text = AppData.instance.Read("keyList", "123456");
         }
-        async void UnhandledException(object sender,Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
+
+        /*void StopListenKeyboard()
+        {
+            _keyboardListener.Unhook();
+        }*/
+
+        async void UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
         {
             Exception ex = e.Exception;
             e.Handled = true;
@@ -70,26 +73,15 @@ namespace ADOFAI_Macro.Source.Views
             await Task.Delay(10000);
             ExceptionGrid.Visibility = Visibility.Collapsed;
         }
-        
-        public bool IsCurrentWindowActive()
+
+        private bool IsCurrentWindowActive()
         {
             var hWnd = WindowNative.GetWindowHandle(this);
             IntPtr activeHwnd = WindowsNative.GetForegroundWindow();
             return (hWnd == activeHwnd);
         }
 
-        private async Task ShowErrorDialog(string message)
-        {
-            var dialog = new ContentDialog
-            {
-                Title = "Error",
-                Content = message,
-                CloseButtonText = "关闭"
-            };
-            await dialog.ShowAsync();
-        }
-
-        private async Task ShowMessage(string title,object message)
+        private async Task ShowMessage(string title, object message)
         {
             await new ContentDialog
             {
@@ -101,23 +93,24 @@ namespace ADOFAI_Macro.Source.Views
         }
 
         #region 控件事件
+
         private async void OpenFileItem_Click(object sender, RoutedEventArgs e)
         {
-                var fileOpenPicker = new FileOpenPicker();
-                fileOpenPicker.FileTypeFilter.Add(".adofai");
+            var fileOpenPicker = new FileOpenPicker();
+            fileOpenPicker.FileTypeFilter.Add(".adofai");
 
-                // 获取窗口句柄
-                var windowHandle = WindowNative.GetWindowHandle(this);
-                InitializeWithWindow.Initialize(fileOpenPicker, windowHandle);
+            // 获取窗口句柄
+            var windowHandle = WindowNative.GetWindowHandle(this);
+            InitializeWithWindow.Initialize(fileOpenPicker, windowHandle);
 
-                StorageFile file = await fileOpenPicker.PickSingleFileAsync();
-                if (file != null)
-                {
-                    _filePath = file.Path;
-                    AppData.instance.Write("lastFile",file.Path);
-                    ContentTextBox.Text = GetString();
-                    StartButton.IsEnabled = true;
-                }
+            StorageFile file = await fileOpenPicker.PickSingleFileAsync();
+            if (file != null)
+            {
+                _filePath = file.Path;
+                AppData.instance.Write("lastFile", file.Path);
+                ContentTextBox.Text = GetString();
+                StartButton.IsEnabled = true;
+            }
         }
 
         private void ExitMenuItem_Click(object sender, RoutedEventArgs e)
@@ -131,30 +124,33 @@ namespace ADOFAI_Macro.Source.Views
             // 如果没有选择文件，弹出提示
             if (_filePath.Length == 0)
             {
-                await ShowMessage(_resourceLoader.GetString("MainWindow_ErrorMessageTitle"), _resourceLoader.GetString("MainWindow_NullFileMessage"));
+                await ShowMessage(_resourceLoader.GetString("MainWindow_ErrorMessageTitle"),
+                    _resourceLoader.GetString("MainWindow_NullFileMessage"));
                 return;
             }
+
             // 如果没有输入键位，弹出提示
             if (string.IsNullOrWhiteSpace(Keys.Text))
             {
-                await ShowMessage(_resourceLoader.GetString("MainWindow_ErrorMessageTitle"), _resourceLoader.GetString("MainWindow_NullKeysMessage"));
+                await ShowMessage(_resourceLoader.GetString("MainWindow_ErrorMessageTitle"),
+                    _resourceLoader.GetString("MainWindow_NullKeysMessage"));
                 return;
             }
 
             // 初始化关卡
             ADOFAI.Level level = _adofai.InitLevel(_filePath);
             Process process = _adofai.FindOrRunProcess();
-
             _macro?._command?.Clear();
-
-            if (CheckBox.IsChecked is bool isChecked && !isChecked) _macro?._command?.Dispose(); 
+            if (CheckBox.IsChecked is false) _macro?._command?.Dispose();
             AppData.instance.Write("keyList", Keys.Text);
-            _macro = new LevelUtils.StartMacro(Keys.Text.ToCharArray().Select(KeyCodeConverter.GetKeyCode).ToList(), LevelUtils.GetNoteTimes(level), CheckBox.IsChecked ?? false);
-            Toast("ADOFAI-Macro", $"{_resourceLoader.GetString("MainWindow_ReadyMessage")}: {Keys.Text.ToCharArray().Select(KeyCodeConverter.GetKeyCode).ToList().Count}");
-
+            ChangeOpenLastMenuItem();
+            _macro = new LevelUtils.StartMacro(Keys.Text.ToCharArray().Select(KeyCodeConverter.GetKeyCode).ToList(),
+                LevelUtils.GetNoteTimes(level), CheckBox.IsChecked ?? false);
+            Toast("ADOFAI-Macro",
+                $"{_resourceLoader.GetString("MainWindow_ReadyMessage")}: {Keys.Text.ToCharArray().Select(KeyCodeConverter.GetKeyCode).ToList().Count}");
             WindowsNative.SwitchToThisWindow(process.MainWindowHandle);
         }
-        
+
         private void OpenLastFileItem_Click(object sender, RoutedEventArgs e)
         {
             _filePath = AppData.instance.Read("lastFile", "").Replace("\r", "");
@@ -169,7 +165,8 @@ namespace ADOFAI_Macro.Source.Views
         private string GetString()
         {
             StringBuilder stringBuilder = new();
-            stringBuilder.AppendLine(value: $"{_resourceLoader.GetString("MainWindow_CurrentFileMessage")}: {_filePath}");
+            stringBuilder.AppendLine(
+                value: $"{_resourceLoader.GetString("MainWindow_CurrentFileMessage")}: {_filePath}");
             stringBuilder.AppendLine(value: $"{_resourceLoader.GetString("MainWindow_RunTipMessage0")}");
             stringBuilder.AppendLine(value: $"{_resourceLoader.GetString("MainWindow_RunTipMessage1")}");
             stringBuilder.AppendLine(value: $"{_resourceLoader.GetString("MainWindow_RunTipMessage2")}");
@@ -179,13 +176,19 @@ namespace ADOFAI_Macro.Source.Views
             return stringBuilder.ToString();
         }
 
+        private void ChangeOpenLastMenuItem()
+        {
+            OpenLast.IsEnabled = !string.IsNullOrEmpty(AppData.instance.Read("lastFile", "").Replace("\r", ""));
+        }
+
         private void Toast(params string[] args)
         {
             ToastContentBuilder builder = new();
             foreach (string arg in args)
-            { 
+            {
                 builder.AddText(arg);
             }
+
             builder.Show();
         }
     }

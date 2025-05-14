@@ -1,12 +1,9 @@
-﻿using System.Diagnostics;
-using Windows.System;
-using LightJson;
-using Window = ABI.Microsoft.UI.Xaml.Window;
+﻿using LightJson;
 using Microsoft.Windows.ApplicationModel.Resources;
 
 namespace ADOFAI_Macro.Source.Utils;
 
-public class LevelUtils
+public static class LevelUtils
 {
     public static List<double> GetNoteTimes(ADOFAI.Level l)
     {
@@ -16,7 +13,7 @@ public class LevelUtils
         // 处理带有变速和旋转的中旋
         for (int i = 0; i < angleDataList.Count; i++)
         {
-            if (angleDataList[i] == 999)
+            if (Math.Abs(angleDataList[i] - 999) < 0.01)
             {
                 if (l.HasEvent(i, "SetSpeed"))
                 {
@@ -45,7 +42,7 @@ public class LevelUtils
         for (int i = 0; i < angleDataList.Count; i++)
         {
             double angleData = angleDataList[i];
-            if (angleData == 999)
+            if (Math.Abs(angleData - 999) < 0.01)
             {
                 midrCount++;
                 JsonObject? temp = parsedChart[i - midrCount].AsJsonObject;
@@ -62,7 +59,7 @@ public class LevelUtils
                     .Add("bpm", "unSet")
                     .Add("direction", 0)
                     .Add("extraHold", 0)
-                    .Add("midr", "false")
+                    .Add("midr", false)
                     .Add("MultiPlanet", "-1");
 
                 parsedChart.Add(temp);
@@ -70,24 +67,21 @@ public class LevelUtils
         }
 
         // 添加结束节点
-        JsonObject endNode = new JsonObject()
-            .Add("angle", Fmod(angleDataList[angleDataList.Count - 1], 360))
+        var endNode = new JsonObject()
+            .Add("angle", Fmod(angleDataList[^1], 360))
             .Add("bpm", "unSet")
             .Add("direction", 0)
             .Add("extraHold", 0)
-            .Add("midr", "false")
+            .Add("midr", false)
             .Add("MultiPlanet", "-1");
 
         parsedChart.Add(endNode);
 
         double bpm = l.GetBPM();
         double pitch = l.GetPitch() / 100.0;
-
-        // TODO: 我看你没使用我就注释掉了qwq
-        //bool speedTypeIsBpm = true;
-
+        
         // 处理事件数据
-        foreach (JsonValue eventValue in levelEvents)
+        foreach (var eventValue in levelEvents)
         {
             JsonObject? o = eventValue.AsJsonObject;
             if (o != null) {
@@ -140,9 +134,9 @@ public class LevelUtils
         int direction = 1;
 
         // 应用全局设置
-        for (int i = 0; i < parsedChart.Count; i++)
+        foreach (var t in parsedChart)
         {
-            var asJsonObject = parsedChart[i].AsJsonObject;
+            var asJsonObject = t.AsJsonObject;
             if (asJsonObject != null) {
                 JsonObject ob = asJsonObject;
                 // 方向处理
@@ -162,14 +156,13 @@ public class LevelUtils
             }
         }
 
-        List<double> noteTime = new List<double>();
-        List<double> noteOffset = new List<double>();
+        List<double> noteTime = [];
 
         double curAngle = 0;
         double curTime = 0;
         bool isMultiPlanet = false;
 
-        foreach (JsonValue chartValue in parsedChart)
+        foreach (var chartValue in parsedChart)
         {
             var asJsonObject = chartValue.AsJsonObject;
             if (asJsonObject != null) 
@@ -204,15 +197,12 @@ public class LevelUtils
                 curTime += deltaTime;
 
                 curAngle = destAngle;
-                if (o["midr"].AsString == "true") {
+                if (o["midr"].AsBoolean) {
                     curAngle += 180;
                 }
-
-                noteOffset.Add(deltaTime);
                 noteTime.Add(curTime);
             }
         }
-
         return noteTime;
     }
 
@@ -232,15 +222,14 @@ public class LevelUtils
         return left;
     }
 
-    public static double AngleToTime(double angle, double bpm)
+    private static double AngleToTime(double angle, double bpm)
     {
         return (angle / 180) * (60 / bpm) * 1000;
     }
-
-
+    
     public class StartMacro
     {
-        private readonly static ResourceLoader _resourceLoader = new ResourceLoader();
+        private static readonly ResourceLoader _resourceLoader = new ();
         private readonly List<int> _keys;
         private readonly List<double> _noteTimes;
         private volatile bool _isRunning;
@@ -268,7 +257,7 @@ public class LevelUtils
             _keys = keys ?? throw new ArgumentNullException(nameof(keys));
             _noteTimes = noteTimes ?? throw new ArgumentNullException(nameof(noteTimes));
             intervals = noteTimes.Skip(1)
-                .Select((time, index) => time - _noteTimes[index])
+                .Select((time, index) => AppUtils.Max(time - _noteTimes[index],60))
                 .ToList();
             intervals.Add(10);
             _command = cmd ? new Command() : null;
@@ -290,8 +279,7 @@ public class LevelUtils
         public void Stop()
         {
             _isRunning = false;
-            // TODO: 可能需要处理null
-            if (_workerThread != null && _workerThread.IsAlive)
+            if (_workerThread is { IsAlive: true })
             {
                 if (!_workerThread.Join(TimeSpan.FromSeconds(1))) // 等待1秒
                 {

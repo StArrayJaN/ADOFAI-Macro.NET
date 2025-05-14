@@ -1,11 +1,8 @@
 ﻿using System.Diagnostics;
-using System.Numerics;
 using System.Reflection;
 using System.Text;
-using Windows.UI.StartScreen;
 using LightJson;
 using LightJson.Serialization;
-using WinRT;
 
 namespace ADOFAI_Macro.Source.Utils;
 
@@ -61,10 +58,15 @@ public class ADOFAI
         return FindOrRunProcess(out _);
     }
 
+    public bool IsWindowActive()
+    {
+        return FindOrRunProcess().MainWindowHandle == WindowsNative.GetForegroundWindow();
+    }
+
     public Level InitLevel(string levelPath)
     {
         string str = Files.ReadFileIfException(levelPath);
-        str = str.Substring(str.IndexOf("{"), str.Length - 1)
+        str = str.Substring(str.IndexOf('{'), str.Length - 1)
             .Replace(" ", "")
             .Replace(",}", "}");
         var strList = str.Split('\n').ToList(); 
@@ -76,7 +78,7 @@ public class ADOFAI
         {
             if (e.Message.Contains("Parser expected '\"',position"))
             {
-                string[] position = e.Message.Substring(e.Message.IndexOf("[") + 1).Replace(" ","").Replace("]","").Split(",");
+                string[] position = e.Message[(e.Message.IndexOf('{') + 1)..].Replace(" ","").Replace("]","").Split(",");
 
                 int[] pos = [int.Parse(position[0]),int.Parse(position[1])];
                 strList[pos[0] -1] = strList[pos[0] -1].Replace(",", "");
@@ -86,10 +88,10 @@ public class ADOFAI
         levelJson = JsonValue.Parse(toString(strList));
         return new Level(levelJson);
 
-        string toString(List<string> str)
+        string toString(List<string> strs)
         {
             StringBuilder sb = new StringBuilder();
-            foreach (var s in str)
+            foreach (var s in strs)
             {
                 sb.AppendLine(s);
             }
@@ -106,7 +108,6 @@ public class ADOFAI
     {
         if (string.IsNullOrEmpty(input))
             return input;
-
         // 使用LINQ过滤所有大于等于\u0020的字符
         return new string(input
             .Where(c => c >= '\u0020')
@@ -208,13 +209,10 @@ public class ADOFAI
                     if (field.FieldType == typeof(TileAngle))
                     {
                         var tileAngle = (TileAngle?)field.GetValue(null);
-
-                        // TODO: 可能需要处理null
                         if (tileAngle != null)
                         {
                             AngleCharMap[tileAngle.CharCode] = tileAngle;
                         }
-                        
                     }
                 }
             }
@@ -228,7 +226,7 @@ public class ADOFAI
 
             private char CharCode { get; }
             public double Angle { get; }
-            public bool Relative { get; }
+            public bool Relative;
         }
     }
 }
