@@ -5,6 +5,7 @@ using System.Text;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.System;
+using Windows.UI.Core;
 using ADOFAI_Macro.Source.Utils;
 using Microsoft.Toolkit.Uwp.Notifications;
 using WinRT.Interop;
@@ -18,9 +19,9 @@ namespace ADOFAI_Macro.Source.Views
         private static readonly ResourceLoader _resourceLoader = new();
         private GlobalKeyboardListener _keyboardListener = new();
         private ADOFAI _adofai = new();
+        private FileWatcher _watcher;
         private string _filePath = "";
         private LevelUtils.StartMacro? _macro;
-
         public MainWindow()
         {
             Thread.CurrentThread.Name = "Main";
@@ -33,11 +34,11 @@ namespace ADOFAI_Macro.Source.Views
             AppUtils.Log.AutoLogException();
             Application.Current.UnhandledException += UnhandledException;
             AppWindow.Resize(new(800, 600));
-            StartListenKeyboard();
+            StartListen();
             Keys.Text = AppData.instance.Read("keyList", "123456");
         }
 
-        void StartListenKeyboard()
+        void StartListen()
         {
             _keyboardListener.ListenKeyCombination(VirtualKey.Control, VirtualKey.C, delegate
             {
@@ -96,7 +97,6 @@ namespace ADOFAI_Macro.Source.Views
                 XamlRoot = Content.XamlRoot
             }.ShowAsync();
         }
-
         #region 控件事件
 
         private async void OpenFileItem_Click(object sender, RoutedEventArgs e)
@@ -112,6 +112,9 @@ namespace ADOFAI_Macro.Source.Views
             if (file != null)
             {
                 _filePath = file.Path;
+                _watcher?.Stop();
+                _watcher = new FileWatcher(_filePath, FileChanged);
+                _watcher.Start();
 #if DEBUG
                 AppUtils.LogInfo($"选择文件:{file.Path}");
 #endif
@@ -167,12 +170,21 @@ namespace ADOFAI_Macro.Source.Views
             _filePath = AppData.instance.Read("lastFile", "").Replace("\r", "");
             if (_filePath.Length != 0)
             {
+                _watcher?.Stop();
+                _watcher = new FileWatcher(_filePath, FileChanged);
+                _watcher.Start();
                 ContentTextBox.Text = GetString();
                 StartButton.IsEnabled = true;
             }
         }
 
         #endregion
+        
+        private void FileChanged()
+        {
+            _macro?.ChangeNoteTimes(LevelUtils.GetNoteTimes(_adofai.InitLevel(_filePath)));
+            _macro?._command?.WriteLine("检测到关卡变化，时间点列表已更新完成");
+        }
 
         private string GetString()
         {

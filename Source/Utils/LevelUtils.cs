@@ -231,7 +231,7 @@ public static class LevelUtils
     {
         private static readonly ResourceLoader _resourceLoader = new ();
         private readonly List<int> _keys;
-        private readonly List<double> _noteTimes;
+        private List<double> _noteTimes;
         private volatile bool _isRunning;
         private Thread? _workerThread;
         private int _keyIndex;
@@ -257,7 +257,7 @@ public static class LevelUtils
             _keys = keys ?? throw new ArgumentNullException(nameof(keys));
             _noteTimes = noteTimes ?? throw new ArgumentNullException(nameof(noteTimes));
             intervals = noteTimes.Skip(1)
-                .Select((time, index) => AppUtils.Max(time - _noteTimes[index],60))
+                .Select((time, index) => AppUtils.Max(time - _noteTimes[index],200))
                 .ToList();
             intervals.Add(10);
             _command = cmd ? new Command() : null;
@@ -266,7 +266,6 @@ public static class LevelUtils
         public void Start()
         {
             if (_isRunning) return;
-            _command?.Clear();
             _isRunning = true;
             _workerThread = new Thread(WorkerLoop)
             {
@@ -274,6 +273,13 @@ public static class LevelUtils
                 Priority = ThreadPriority.Highest // 提升时间精度
             };
             _workerThread.Start();
+            _command?.Clear();
+        }
+
+        public void ChangeNoteTimes(List<double> noteTimes)
+        {
+            if (_isRunning) Stop();
+            this._noteTimes = noteTimes;
         }
 
         public void Stop()
@@ -329,7 +335,7 @@ public static class LevelUtils
             {
                 if (keyIndex >= _keys.Count) keyIndex = 0;
                 int keyCode = _keys[keyIndex];
-                _command?.WriteLine($"{_resourceLoader.GetString("LevelUtils_CurrentKeyMessage")}: {KeyCodeConverter.GetKeyString(keyCode)}," +
+                _command?.WriteLine($"{_resourceLoader.GetString("LevelUtils_CurrentKeyMessage")}: {KeyCodeConverter.GetKeyName(keyCode)}," +
                                     $"{_resourceLoader.GetString("LevelUtils_BpmMessage")}: {60000 / (_noteTimes[currentIndex] - _noteTimes[currentIndex - 1]):F4}," +
                                     $"{_resourceLoader.GetString("LevelUtils_NumberOfTilesMessage")}: {currentIndex}/{_noteTimes.Count -1}," +
                                     $"{_resourceLoader.GetString("LevelUtils_MisalignmentMessage")}: {_offset}ms");

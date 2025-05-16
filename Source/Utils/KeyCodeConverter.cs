@@ -27,18 +27,88 @@ public class KeyCodeConverter
     /// Item3 - 是否需要Ctrl
     /// Item4 - 是否需要Alt
     /// </returns>
-
-    public static Dictionary<int, string> keys = new();
-
-    public static void InitKeys()
+    
+     public static readonly Dictionary<string, int> KeyMap = new Dictionary<string, int>
     {
-        if (keys.Count > 0) return;
-        int[] values = Enum.GetValues<VirtualKey>().Select(a => (int)a).ToArray();
-        string[] names = Enum.GetNames<VirtualKey>().Select(a => a.ToString()).ToArray();
-        for (int i = 0; i < values.Length; i++)
+        // 字母键（ASCII码）
+        {"A", 65}, {"B", 66}, {"C", 67}, {"D", 68}, {"E", 69},
+        {"F", 70}, {"G", 71}, {"H", 72}, {"I", 73}, {"J", 74},
+        {"K", 75}, {"L", 76}, {"M", 77}, {"N", 78}, {"O", 79},
+        {"P", 80}, {"Q", 81}, {"R", 82}, {"S", 83}, {"T", 84},
+        {"U", 85}, {"V", 86}, {"W", 87}, {"X", 88}, {"Y", 89},
+        {"Z", 90},
+        
+        // 功能键（F1-F12）
+        {"F1", 112}, {"F2", 113}, {"F3", 114}, {"F4", 115}, {"F5", 116},
+        {"F6", 117}, {"F7", 118}, {"F8", 119}, {"F9", 120}, {"F10", 121},
+        {"F11", 122}, {"F12", 123},
+        // 符号键（主键盘区）
+        {"~", 192}, {"`", 192}, // ~ 和 ` 共用同一个键码
+        {"!", 49}, {"1", 49},   // ! 和 1 共用同一个键码
+        {"@", 50}, {"2", 50},   // @ 和 2 共用同一个键码
+        {"#", 51}, {"3", 51},   // # 和 3 共用同一个键码
+        {"$", 52}, {"4", 52},   // $ 和 4 共用同一个键码
+        {"%", 53}, {"5", 53},   // % 和 5 共用同一个键码
+        {"^", 54}, {"6", 54},   // ^ 和 6 共用同一个键码
+        {"&", 55}, {"7", 55},   // & 和 7 共用同一个键码
+        {"*", 56}, {"8", 56},   // * 和 8 共用同一个键码
+        {"(", 57}, {"9", 57},   // ( 和 9 共用同一个键码
+        {")", 48}, {"0", 48},   // ) 和 0 共用同一个键码
+        {"_", 189}, {"-", 189}, // _ 和 - 共用同一个键码
+        {"+", 187}, {"=", 187}, // + 和 = 共用同一个键码
+        {"[", 219}, {"{", 219}, // [ 和 { 共用同一个键码
+        {"]", 221}, {"}", 221}, // ] 和 } 共用同一个键码
+        {"\\", 220}, {"|", 220}, // \ 和 | 共用同一个键码
+        {";", 186}, {":", 186}, // ; 和 : 共用同一个键码
+        {"'", 222}, {"\"", 222}, // ' 和 " 共用同一个键码
+        {",", 188}, {"<", 188}, // , 和 < 共用同一个键码
+        {".", 190}, {">", 190}, // . 和 > 共用同一个键码
+        {"/", 191}, {"?", 191}, // / 和 ? 共用同一个键码
+
+        // 特殊键
+        {"Enter", 13}, {"Tab", 9}, {"Escape", 27}, {"Space", 32},
+        {"Backspace", 8}, {"Delete", 46}, {"Insert", 45},
+        {"Home", 36}, {"End", 35}, {"PageUp", 33}, {"PageDown", 34},
+        {"Up", 38}, {"Down", 40}, {"Left", 37}, {"Right", 39},
+        {"CapsLock", 20}, {"NumLock", 144}, {"ScrollLock", 145},
+        {"PrintScreen", 44}, {"Pause", 19},
+
+        // 小键盘数字键
+        {"Numpad0", 96}, {"Numpad1", 97}, {"Numpad2", 98}, {"Numpad3", 99}, {"Numpad4", 100},
+        {"Numpad5", 101}, {"Numpad6", 102}, {"Numpad7", 103}, {"Numpad8", 104}, {"Numpad9", 105},
+        {"NumpadMultiply", 106}, {"NumpadAdd", 107}, {"NumpadSubtract", 109}, {"NumpadDecimal", 110},
+        {"NumpadDivide", 111},
+
+        // 其他特殊键
+        {"Shift", 16}, {"Control", 17}, {"Alt", 18}, {"Win", 91},
+        {"ContextMenu", 93}, {"LeftShift", 160}, {"RightShift", 161},
+        {"LeftControl", 162}, {"RightControl", 163}, {"LeftAlt", 164}, {"RightAlt", 165}
+    };
+    public static readonly Dictionary<int, string> ReversedKeyMap = new Dictionary<int, string>();
+
+    static KeyCodeConverter()
+    {
+        foreach (var kvp in KeyMap)
         {
-            keys[values[i]] = names[i];
+            ReversedKeyMap[kvp.Value] = kvp.Key;
         }
+    }
+    
+    
+    // 根据按键名称获取键码
+    public static int GetKeyCode(string keyName)
+    {
+        if (KeyMap.TryGetValue(keyName, out int keyCode))
+        {
+            return keyCode;
+        }
+        throw new ArgumentException($"Key '{keyName}' not found in KeyMap.");
+    }
+
+    // 根据键码获取按键名称
+    public static string GetKeyName(int keyCode)
+    {
+        return ReversedKeyMap[keyCode];
     }
     public static Tuple<byte, bool, bool, bool> GetKeyCodeTuple(char character)
     {
@@ -64,12 +134,6 @@ public class KeyCodeConverter
     {
         var keyInfo = GetKeyCodeTuple(character);
         return $"0x{keyInfo.Item1:X2}";
-    }
-
-    public static string GetKeyString(int keyCode)
-    {
-        InitKeys();
-        return keys[keyCode];
     }
     
     public static int GetKeyCode(char character)

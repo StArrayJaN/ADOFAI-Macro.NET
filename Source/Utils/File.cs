@@ -10,8 +10,8 @@ public class Files
         }
         catch (IOException)
         {
-            // TODO: 可能需要处理null
             string? dirPath = new FileInfo(path).DirectoryName;
+            if (File.Exists(dirPath + "/temp.txt")) File.Delete(dirPath + "/temp.txt");
             System.IO.File.Copy(path,dirPath + "/temp.txt");
             return System.IO.File.ReadAllText(dirPath + "/temp.txt");
         }
