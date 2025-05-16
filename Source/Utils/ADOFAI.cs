@@ -83,6 +83,14 @@ public class ADOFAI
                 int[] pos = [int.Parse(position[0]),int.Parse(position[1])];
                 strList[pos[0] -1] = strList[pos[0] -1].Replace(",", "");
             }
+
+            if (e.Message.Contains("The parser encountered an invalid or unexpected character."))
+            {
+                string[] position = e.Message[(e.Message.IndexOf('[') + 1)..].Replace(" ","").Replace("]","").Split(",");
+
+                int[] pos = [int.Parse(position[0]),int.Parse(position[1])];
+                strList[pos[0] -1] = strList[pos[0] -1].Replace("]","],");
+            }
         }
 
         levelJson = JsonValue.Parse(toString(strList));

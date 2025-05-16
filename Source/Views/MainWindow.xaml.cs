@@ -183,7 +183,6 @@ namespace ADOFAI_Macro.Source.Views
         private void FileChanged()
         {
             _macro?.ChangeNoteTimes(LevelUtils.GetNoteTimes(_adofai.InitLevel(_filePath)));
-            _macro?._command?.WriteLine("检测到关卡变化，时间点列表已更新完成");
         }
 
         private string GetString()

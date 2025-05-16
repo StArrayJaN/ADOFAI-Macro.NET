@@ -41,7 +41,7 @@ namespace LightJson.Serialization
 		/// <param name="type">The error type that describes the cause of the error.</param>
 		/// <param name="position">The position in the text where the error occurred.</param>
 		public JsonParseException(string message, ErrorType type, TextPosition position)
-			: base(message)
+			: base(message + $",position:{position}")
 		{
 			this.Type = type;
 			this.Position = position;
