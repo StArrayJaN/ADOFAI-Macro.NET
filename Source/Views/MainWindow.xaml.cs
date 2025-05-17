@@ -162,7 +162,6 @@ namespace ADOFAI_Macro.Source.Views
 #if DEBUG
             AppUtils.LogInfo("启动宏，键位:" + Keys.Text);
 #endif
-            WindowsNative.SwitchToThisWindow(process.MainWindowHandle);
         }
 
         private void OpenLastFileItem_Click(object sender, RoutedEventArgs e)
@@ -205,7 +204,7 @@ namespace ADOFAI_Macro.Source.Views
             OpenLast.IsEnabled = !string.IsNullOrEmpty(AppData.instance.Read("lastFile", "").Replace("\r", ""));
         }
 
-        private void Toast(params string[] args)
+        public static void Toast(params string[] args)
         {
             ToastContentBuilder builder = new();
             foreach (string arg in args)

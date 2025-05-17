@@ -15,6 +15,8 @@ public class WindowsNative
     [DllImport("user32.dll")]
     public static extern IntPtr SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, uint wFlags);
 
+    [DllImport("kernel32.dll")]
+    public static extern int GetLastError();
     [DllImport("user32.dll", SetLastError = true)]
     private static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
 

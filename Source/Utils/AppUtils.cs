@@ -49,6 +49,13 @@ public class AppUtils
     public static void LogError(params object[] messages) => Log.instance.Error(messages);
     public static void LogInfo(params object[] messages) => Log.instance.Info(messages);
     public static void LogWarning(params object[] messages) => Log.instance.Warning(messages);
+    public static void LogDebugInfo(params object[] messages)
+    {
+        #if DEBUG
+        Log.instance.Info(messages);
+        #endif
+    }
+
     public static void Sleep(double ms) {
         double currentTime = AppUtils.currentTime();
         while (true) {

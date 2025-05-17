@@ -327,7 +327,6 @@ public static class LevelUtils
         {
             return AppUtils.currentTime();
         }
-
         
         private void TriggerKeyPress(ref int keyIndex,int currentIndex)
         {

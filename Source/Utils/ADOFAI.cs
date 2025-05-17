@@ -63,6 +63,16 @@ public class ADOFAI
         return FindOrRunProcess().MainWindowHandle == WindowsNative.GetForegroundWindow();
     }
 
+    public IntPtr GetMonoAddr()
+    {
+        var modules = FindOrRunProcess().Modules;
+        for (int i = 0; i < modules.Count; i++)
+        {
+            if (modules[i].ModuleName.Contains("mono-2.0-bdwgc.dll")) return modules[i].BaseAddress;
+        }
+        return 0;
+    }
+
     public Level InitLevel(string levelPath)
     {
         string str = Files.ReadFileIfException(levelPath);
@@ -132,11 +142,30 @@ public class ADOFAI
             {
                 return json["angleData"].AsJsonArray?.Select(x => x.AsNumber).ToList() ?? new();
             }
-            return json["pathData"]
+            List<TileAngle> tileAngles = json["pathData"]
                     .AsString?
                     .ToCharArray()
-                    .Select(c => TileAngle.AngleCharMap[c].Angle)
+                    .Select(c => TileAngle.AngleCharMap[c])
                     .ToList() ?? new();
+            double staticAngle = 0d;
+            List<double> angleData = new();
+
+            foreach (TileAngle angle in tileAngles) {
+                if (angle == TileAngle.NONE) {
+                    angleData.Add(angle.Angle);
+                    continue;
+                }
+                staticAngle = angle.Relative ? generalizeAngle(staticAngle + 180 - angle.Angle) : angle.Angle;
+                angleData.Add(staticAngle);
+            }
+            
+            return angleData;
+            double generalizeAngle(double angle) {
+                // 将角度减去360度的整数倍，得到0-360度之间的角度
+                angle = angle - ((int) (angle / 360)) * 360;
+                // 如果角度小于0，则加上360度，使其变为0-360度之间的角度
+                return angle < 0 ? angle + 360 : angle;
+            }
         }
 
         public JsonObject? GetEvent(int floor,string eventName)

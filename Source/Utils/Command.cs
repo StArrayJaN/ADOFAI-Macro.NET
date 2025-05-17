@@ -36,21 +36,25 @@ public class Command : IDisposable
         }
         WindowsNative.SetTopMost(_consoleHandle);
         WindowsNative.SetWindowSize(_consoleHandle, 500, 200);
+        AppUtils.LogDebugInfo("控制台:创建");
     }
 
     public void WriteLine(string message)
     {
         Console.WriteLine(message);
+        AppUtils.LogDebugInfo($"控制台:{message}");
     }
 
     public void WriteLine(object value)
     {
         Console.WriteLine(value);
+        AppUtils.LogDebugInfo($"控制台:{value}");
     }
 
     public void WriteLine(string format, params object[] args)
     {
         Console.WriteLine(format, args);
+        AppUtils.LogDebugInfo($"控制台:{string.Format(format,args)}");
     }
 
     // TODO: 可能需要处理null
@@ -64,6 +68,7 @@ public class Command : IDisposable
         try
         {
             Console.Clear();
+            AppUtils.LogDebugInfo("控制台:清空");
         } catch(IOException){}
     }
 
@@ -81,6 +86,7 @@ public class Command : IDisposable
             if (_ownsConsole && _consoleHandle != IntPtr.Zero)
             {
                 FreeConsole();
+                AppUtils.LogDebugInfo("控制台:销毁");
                 _consoleHandle = IntPtr.Zero;
             }
         }
