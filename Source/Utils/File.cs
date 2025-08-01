@@ -12,8 +12,8 @@ public class Files
         {
             string? dirPath = new FileInfo(path).DirectoryName;
             if (File.Exists(dirPath + "/temp.txt")) File.Delete(dirPath + "/temp.txt");
-            System.IO.File.Copy(path,dirPath + "/temp.txt");
-            return System.IO.File.ReadAllText(dirPath + "/temp.txt");
+            File.Copy(path,dirPath + "/temp.txt");
+            return File.ReadAllText(dirPath + "/temp.txt");
         }
     } 
 }

@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using LightJson.Serialization;
+using Json.Serialization;
 
-namespace LightJson
+namespace Json
 {
 	/// <summary>
 	/// Represents an ordered collection of JsonValues.

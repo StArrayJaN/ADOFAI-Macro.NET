@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LightJson.Serialization
+namespace Json.Serialization
 {
 	/// <summary>
 	/// Represents a position within a plain text resource.

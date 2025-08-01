@@ -34,8 +34,8 @@ public class Command : IDisposable
                 throw new Exception("无法创建控制台窗口");
             }
         }
-        WindowsNative.SetTopMost(_consoleHandle);
-        WindowsNative.SetWindowSize(_consoleHandle, 500, 200);
+        WindowsNativeAPI.SetTopMost(_consoleHandle);
+        WindowsNativeAPI.SetWindowSize(_consoleHandle, 500, 200);
         AppUtils.LogDebugInfo("控制台:创建");
     }
 

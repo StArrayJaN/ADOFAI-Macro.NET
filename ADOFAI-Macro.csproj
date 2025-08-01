@@ -47,6 +47,8 @@
 
         <Manifest Include="$(ApplicationManifest)" />
 
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.4-beta1" />
+
         <PackageReference Include="SteamPath" Version="1.2.1" />
     </ItemGroup>
 

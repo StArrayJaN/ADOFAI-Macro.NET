@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using System.Text;
-using LightJson;
+using Json;
 using WinRT;
 
 namespace ADOFAI_Macro.Source.Utils;

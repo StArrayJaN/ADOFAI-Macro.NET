@@ -1,9 +1,9 @@
 using System;
 using System.Diagnostics;
 using System.Collections.Generic;
-using LightJson.Serialization;
+using Json.Serialization;
 
-namespace LightJson
+namespace Json
 {
 	/// <summary>
 	/// A wrapper object that contains a valid JSON value.

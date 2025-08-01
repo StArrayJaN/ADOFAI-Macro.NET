@@ -3,7 +3,7 @@ using System.IO;
 using System.Text;
 using System.Globalization;
 
-namespace LightJson.Serialization
+namespace Json.Serialization
 {
 	using ErrorType = JsonParseException.ErrorType;
 

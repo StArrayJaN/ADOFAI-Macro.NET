@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LightJson
+namespace Json
 {
 	/// <summary>
 	/// Enumerates the types of Json values.

@@ -1,8 +1,9 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
 using System.Text;
-using LightJson;
-using LightJson.Serialization;
+using Json;
+using Json.Serialization;
+using Newtonsoft.Json;
 
 namespace ADOFAI_Macro.Source.Utils;
 
@@ -10,7 +11,6 @@ public class ADOFAI
 {
     public ADOFAI()
     {
-        // TODO: 如果需要向用户显示信息就把这个删掉，不需要就把注释删掉
         installDir = SteamPath.SteamPath.Find("977950") ?? string.Empty;
         string name = new DirectoryInfo(installDir).Name;
         exePath = $"{installDir}\\{name}.exe";
@@ -60,50 +60,15 @@ public class ADOFAI
 
     public bool IsWindowActive()
     {
-        return FindOrRunProcess().MainWindowHandle == WindowsNative.GetForegroundWindow();
-    }
-
-    public IntPtr GetMonoAddr()
-    {
-        var modules = FindOrRunProcess().Modules;
-        for (int i = 0; i < modules.Count; i++)
-        {
-            if (modules[i].ModuleName.Contains("mono-2.0-bdwgc.dll")) return modules[i].BaseAddress;
-        }
-        return 0;
+        return FindOrRunProcess().MainWindowHandle == WindowsNativeAPI.GetForegroundWindow();
     }
 
     public Level InitLevel(string levelPath)
     {
         string str = Files.ReadFileIfException(levelPath);
-        str = str.Substring(str.IndexOf('{'), str.Length - 1)
-            .Replace(" ", "")
-            .Replace(",}", "}");
-        var strList = str.Split('\n').ToList(); 
-        try
-        {
-            JsonValue.Parse(str);
-        }
-        catch (JsonParseException e)
-        {
-            if (e.Message.Contains("Parser expected '\"',position"))
-            {
-                string[] position = e.Message[(e.Message.IndexOf('{') + 1)..].Replace(" ","").Replace("]","").Split(",");
-
-                int[] pos = [int.Parse(position[0]),int.Parse(position[1])];
-                strList[pos[0] -1] = strList[pos[0] -1].Replace(",", "");
-            }
-
-            if (e.Message.Contains("The parser encountered an invalid or unexpected character."))
-            {
-                string[] position = e.Message[(e.Message.IndexOf('[') + 1)..].Replace(" ","").Replace("]","").Split(",");
-
-                int[] pos = [int.Parse(position[0]),int.Parse(position[1])];
-                strList[pos[0] -1] = strList[pos[0] -1].Replace("]","],");
-            }
-        }
-
-        levelJson = JsonValue.Parse(toString(strList));
+        var json = SimpleJson.Deserialize(str); //使用ADOFAI的Json工具反序列化
+        str = JsonConvert.SerializeObject(json); //使用Newtonsoft.Json序列化为文本
+        levelJson = JsonValue.Parse(str);
         return new Level(levelJson);
 
         string toString(List<string> strs)

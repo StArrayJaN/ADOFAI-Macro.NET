@@ -19,7 +19,6 @@ namespace ADOFAI_Macro.Source.Views
         private static readonly ResourceLoader _resourceLoader = new();
         private GlobalKeyboardListener _keyboardListener = new();
         private ADOFAI _adofai = new();
-        private FileWatcher _watcher;
         private string _filePath = "";
         private LevelUtils.StartMacro? _macro;
         public MainWindow()
@@ -83,7 +82,7 @@ namespace ADOFAI_Macro.Source.Views
         private bool IsCurrentWindowActive()
         {
             var hWnd = WindowNative.GetWindowHandle(this);
-            IntPtr activeHwnd = WindowsNative.GetForegroundWindow();
+            IntPtr activeHwnd = WindowsNativeAPI.GetForegroundWindow();
             return (hWnd == activeHwnd);
         }
 
@@ -112,9 +111,6 @@ namespace ADOFAI_Macro.Source.Views
             if (file != null)
             {
                 _filePath = file.Path;
-                _watcher?.Stop();
-                _watcher = new FileWatcher(_filePath, FileChanged);
-                _watcher.Start();
 #if DEBUG
                 AppUtils.LogInfo($"选择文件:{file.Path}");
 #endif
@@ -150,7 +146,7 @@ namespace ADOFAI_Macro.Source.Views
 
             // 初始化关卡
             ADOFAI.Level level = _adofai.InitLevel(_filePath);
-            Process process = _adofai.FindOrRunProcess();
+            _adofai.FindOrRunProcess();
             _macro?._command?.Clear();
             if (CheckBox.IsChecked is false) _macro?._command?.Dispose();
             AppData.instance.Write("keyList", Keys.Text);
@@ -162,27 +158,18 @@ namespace ADOFAI_Macro.Source.Views
 #if DEBUG
             AppUtils.LogInfo("启动宏，键位:" + Keys.Text);
 #endif
-        }
+        } 
 
         private void OpenLastFileItem_Click(object sender, RoutedEventArgs e)
         {
             _filePath = AppData.instance.Read("lastFile", "").Replace("\r", "");
             if (_filePath.Length != 0)
             {
-                _watcher?.Stop();
-                _watcher = new FileWatcher(_filePath, FileChanged);
-                _watcher.Start();
                 ContentTextBox.Text = GetString();
                 StartButton.IsEnabled = true;
             }
         }
-
         #endregion
-        
-        private void FileChanged()
-        {
-            _macro?.ChangeNoteTimes(LevelUtils.GetNoteTimes(_adofai.InitLevel(_filePath)));
-        }
 
         private string GetString()
         {

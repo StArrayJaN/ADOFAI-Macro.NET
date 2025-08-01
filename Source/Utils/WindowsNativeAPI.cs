@@ -4,7 +4,7 @@ using Microsoft.Windows.ApplicationModel.Resources;
 
 namespace ADOFAI_Macro.Source.Utils;
 
-public class WindowsNative
+public class WindowsNativeAPI
 {
     [DllImport("user32.dll")]
     public static extern nint GetForegroundWindow();

@@ -1,4 +1,4 @@
-﻿using LightJson;
+﻿using Json;
 using Microsoft.Windows.ApplicationModel.Resources;
 
 namespace ADOFAI_Macro.Source.Utils;
@@ -338,7 +338,7 @@ public static class LevelUtils
                                     $"{_resourceLoader.GetString("LevelUtils_BpmMessage")}: {60000 / (_noteTimes[currentIndex] - _noteTimes[currentIndex - 1]):F4}," +
                                     $"{_resourceLoader.GetString("LevelUtils_NumberOfTilesMessage")}: {currentIndex}/{_noteTimes.Count -1}," +
                                     $"{_resourceLoader.GetString("LevelUtils_MisalignmentMessage")}: {_offset}ms");
-                WindowsNative.PressKey(keyCode,intervals[currentIndex] - 5);
+                WindowsNativeAPI.PressKey(keyCode,intervals[currentIndex] - 5);
                 keyIndex++;
             }
         }
