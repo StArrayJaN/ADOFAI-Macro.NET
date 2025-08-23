@@ -21,11 +21,12 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="2*" />
             <ColumnDefinition Width="1*" />
+            <ColumnDefinition Width="1*" />
             <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
 
         <!-- 菜单栏 -->
-        <MenuBar Grid.Row="0" Grid.ColumnSpan="2">
+        <MenuBar Grid.Row="0" Grid.ColumnSpan="3">
             <MenuBarItem x:Uid="MainWindow_MenuBarFileItem" Title="文件">
                 <MenuFlyoutItem x:Uid="MainWindow_OpenFileMenuFlyoutItem"
                                 Click="OpenFileItem_Click"
@@ -43,7 +44,7 @@
 
         <!-- 内容区域 -->
         <ScrollViewer Grid.Row="1"
-                      Grid.ColumnSpan="2"
+                      Grid.ColumnSpan="3"
                       Margin="12,5"
                       HorizontalScrollBarVisibility="Auto"
                       VerticalScrollBarVisibility="Auto">
@@ -64,10 +65,24 @@
                  VerticalAlignment="Center"
                  PlaceholderText="请输入键位..." />
 
+        <NumberBox Name="StartIndex"
+                   x:Uid="MainWindow_StartIndexNumberBox"
+                   Grid.Row="2"
+                   Grid.Column="1"
+                   Margin="12,5"
+                   HorizontalAlignment="Stretch"
+                   VerticalAlignment="Center"
+                   PlaceholderText="起始索引 (默认:0)"
+                   Minimum="0"
+                   Value="0"
+                   IsEnabled="False"
+                   Text="0"
+                   SpinButtonPlacementMode="Inline" />
+
         <CheckBox Name="CheckBox"
                   x:Uid="MainWindow_EnableConsoleOutputCheckBox"
                   Grid.Row="2"
-                  Grid.Column="1"
+                  Grid.Column="2"
                   Margin="12"
                   Content="启用控制台输出" />
 
@@ -75,7 +90,7 @@
         <Button x:Name="StartButton"
                 x:Uid="MainWindow_RunMacroButton"
                 Grid.Row="2"
-                Grid.Column="2"
+                Grid.Column="3"
                 Margin="12,12"
                 HorizontalAlignment="Right"
                 Click="Start_Click"
@@ -85,7 +100,7 @@
                 Style="{StaticResource AccentButtonStyle}" />
         <Grid Name="ExceptionGrid"
               Grid.Row="4"
-              Grid.ColumnSpan="2"
+              Grid.ColumnSpan="3"
               Margin="12"
               Background="#10FF0000"
               Visibility="Collapsed">

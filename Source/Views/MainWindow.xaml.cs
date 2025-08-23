@@ -2,6 +2,7 @@
 
 using System.Diagnostics;
 using System.Text;
+using Windows.Globalization.NumberFormatting;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.System;
@@ -21,6 +22,7 @@ namespace ADOFAI_Macro.Source.Views
         private ADOFAI _adofai = new();
         private string _filePath = "";
         private LevelUtils.StartMacro? _macro;
+        public static ADOFAI.Level currentLevel;
         public MainWindow()
         {
             Thread.CurrentThread.Name = "Main";
@@ -34,6 +36,10 @@ namespace ADOFAI_Macro.Source.Views
             Application.Current.UnhandledException += UnhandledException;
             AppWindow.Resize(new(800, 600));
             StartListen();
+            DecimalFormatter formatter = new DecimalFormatter();
+            formatter.IntegerDigits = 1;
+            formatter.FractionDigits = 0;
+            StartIndex.NumberFormatter = formatter;
             Keys.Text = AppData.instance.Read("keyList", "123456");
         }
 
@@ -116,6 +122,8 @@ namespace ADOFAI_Macro.Source.Views
 #endif
                 AppData.instance.Write("lastFile", file.Path);
                 ContentTextBox.Text = GetString();
+                StartIndex.IsEnabled = true;
+                StartIndex.Maximum = _adofai.InitLevel(file.Path).GetAngleData().Count - 1;
                 StartButton.IsEnabled = true;
             }
         }
@@ -146,13 +154,14 @@ namespace ADOFAI_Macro.Source.Views
 
             // 初始化关卡
             ADOFAI.Level level = _adofai.InitLevel(_filePath);
+            currentLevel = level;
             _adofai.FindOrRunProcess();
             _macro?._command?.Clear();
             if (CheckBox.IsChecked is false) _macro?._command?.Dispose();
             AppData.instance.Write("keyList", Keys.Text);
             ChangeOpenLastMenuItem();
             _macro = new LevelUtils.StartMacro(Keys.Text.ToCharArray().Select(KeyCodeConverter.GetKeyCode).ToList(),
-                LevelUtils.GetNoteTimes(level), CheckBox.IsChecked ?? false);
+                LevelUtils.GetNoteTimes(level),CheckBox.IsChecked ?? false, (int)StartIndex.Value);
             Toast("ADOFAI-Macro",
                 $"{_resourceLoader.GetString("MainWindow_ReadyMessage")}: {Keys.Text.ToCharArray().Select(KeyCodeConverter.GetKeyCode).ToList().Count}");
 #if DEBUG
@@ -167,6 +176,8 @@ namespace ADOFAI_Macro.Source.Views
             {
                 ContentTextBox.Text = GetString();
                 StartButton.IsEnabled = true;
+                StartIndex.IsEnabled = true;
+                StartIndex.Maximum = _adofai.InitLevel(_filePath).GetAngleData().Count - 1;
             }
         }
         #endregion
