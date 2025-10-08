@@ -3,7 +3,7 @@ using System.Text;
 
 namespace ADOFAI_Macro.Source.Utils;
 
-public class AppUtils
+public static class AppUtils
 {
     private static readonly double tickToNanoseconds = 1_000_000_000.0 / Stopwatch.Frequency;
     
@@ -22,6 +22,29 @@ public class AppUtils
         return ((Stopwatch.GetTimestamp() - startingTimestamp) * tickToNanoseconds);
     }
     
+    public static string ShuffleString(this string input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return input;
+
+        // 将字符串转换为字符数组
+        char[] characters = input.ToCharArray();
+        
+        // 使用随机数生成器
+        Random rng = new Random();
+        
+        // Fisher-Yates 洗牌算法
+        int n = characters.Length;
+        while (n > 1)
+        {
+            n--;
+            int k = rng.Next(n + 1);
+            // 交换字符位置
+            (characters[k], characters[n]) = (characters[n], characters[k]);
+        }
+        
+        return new string(characters);
+    }
     public static string? GetResourcePath()
     {
         DirectoryInfo dir = new DirectoryInfo(Directory.GetCurrentDirectory());

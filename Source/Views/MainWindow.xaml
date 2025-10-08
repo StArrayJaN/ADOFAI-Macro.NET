@@ -80,11 +80,11 @@
                    SpinButtonPlacementMode="Inline" />
 
         <CheckBox Name="CheckBox"
-                  x:Uid="MainWindow_EnableConsoleOutputCheckBox"
+                  x:Uid="MainWindow_ShuffleString"
                   Grid.Row="2"
                   Grid.Column="2"
                   Margin="12"
-                  Content="启用控制台输出" />
+                  Content="打乱键位" />
 
         <!-- 底部按钮 -->
         <Button x:Name="StartButton"

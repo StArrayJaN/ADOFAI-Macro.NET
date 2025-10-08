@@ -1,12 +1,8 @@
-// MainWindow.xaml.cs
-
-using System.Diagnostics;
 using System.Text;
 using Windows.Globalization.NumberFormatting;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.System;
-using Windows.UI.Core;
 using ADOFAI_Macro.Source.Utils;
 using Microsoft.Toolkit.Uwp.Notifications;
 using WinRT.Interop;
@@ -18,11 +14,13 @@ namespace ADOFAI_Macro.Source.Views
     public sealed partial class MainWindow
     {
         private static readonly ResourceLoader _resourceLoader = new();
-        private GlobalKeyboardListener _keyboardListener = new();
-        private ADOFAI _adofai = new();
+        private readonly GlobalKeyboardListener _keyboardListener = new();
+        private readonly ADOFAI _adofai = new();
         private string _filePath = "";
-        private LevelUtils.StartMacro? _macro;
-        public static ADOFAI.Level currentLevel;
+        private StartMacro? _macro;
+        public ADOFAI.Level? currentLevel;
+
+        public static MainWindow? mainWindow;
         public MainWindow()
         {
             Thread.CurrentThread.Name = "Main";
@@ -36,11 +34,19 @@ namespace ADOFAI_Macro.Source.Views
             Application.Current.UnhandledException += UnhandledException;
             AppWindow.Resize(new(800, 600));
             StartListen();
-            DecimalFormatter formatter = new DecimalFormatter();
-            formatter.IntegerDigits = 1;
-            formatter.FractionDigits = 0;
+            DecimalFormatter formatter = new()
+            {
+                IntegerDigits = 1,
+                FractionDigits = 0
+            };
             StartIndex.NumberFormatter = formatter;
-            Keys.Text = AppData.instance.Read("keyList", "123456");
+            Keys.Text = AppData.instance.Read("keyList", "ASDFGHJKL");
+            mainWindow = this;
+        }
+
+        public void RunOnMainThread(Action action)
+        {
+            DispatcherQueue.TryEnqueue(() => action());
         }
 
         void StartListen()
@@ -65,7 +71,7 @@ namespace ADOFAI_Macro.Source.Views
                         _macro.Offset += 2;
                         break;
                     case VirtualKey.Escape:
-                        _macro.Stop();
+                        _macro?.Stop();
                         break;
                 }
             });
@@ -156,16 +162,19 @@ namespace ADOFAI_Macro.Source.Views
             ADOFAI.Level level = _adofai.InitLevel(_filePath);
             currentLevel = level;
             _adofai.FindOrRunProcess();
-            _macro?._command?.Clear();
-            if (CheckBox.IsChecked is false) _macro?._command?.Dispose();
+            var keysText = Keys.Text;
+            if (CheckBox.IsChecked is true)
+            {
+                keysText = keysText.ShuffleString();
+            }
             AppData.instance.Write("keyList", Keys.Text);
             ChangeOpenLastMenuItem();
-            _macro = new LevelUtils.StartMacro(Keys.Text.ToCharArray().Select(KeyCodeConverter.GetKeyCode).ToList(),
+            _macro = new StartMacro(keysText.ToCharArray().Select(KeyCodeConverter.GetKeyCode).ToList(),
                 LevelUtils.GetNoteTimes(level),CheckBox.IsChecked ?? false, (int)StartIndex.Value);
             Toast("ADOFAI-Macro",
-                $"{_resourceLoader.GetString("MainWindow_ReadyMessage")}: {Keys.Text.ToCharArray().Select(KeyCodeConverter.GetKeyCode).ToList().Count}");
+                $"{_resourceLoader.GetString("MainWindow_ReadyMessage")}: {keysText}");
 #if DEBUG
-            AppUtils.LogInfo("启动宏，键位:" + Keys.Text);
+            AppUtils.LogInfo("启动宏，键位:" + keysText);
 #endif
         } 
 

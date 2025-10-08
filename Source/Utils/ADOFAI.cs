@@ -9,6 +9,8 @@ namespace ADOFAI_Macro.Source.Utils;
 
 public class ADOFAI
 {
+    
+    public Process _process{ get; private set;}
     public ADOFAI()
     {
         installDir = SteamPath.SteamPath.Find("977950") ?? string.Empty;
@@ -45,12 +47,18 @@ public class ADOFAI
             if (process.ProcessName == new FileInfo(exePath).Name.Replace(".exe", ""))
             {
                 isNewSession = false;
+                _process = process;
                 return process;
             }
         }
 
         isNewSession = true;
         return RunProcess();
+    }
+
+    public int GetThreadID()
+    {
+        return FindOrRunProcess().Threads[0].Id;
     }
 
     public Process FindOrRunProcess()
@@ -70,16 +78,6 @@ public class ADOFAI
         str = JsonConvert.SerializeObject(json); //使用Newtonsoft.Json序列化为文本
         levelJson = JsonValue.Parse(str);
         return new Level(levelJson);
-
-        string toString(List<string> strs)
-        {
-            StringBuilder sb = new StringBuilder();
-            foreach (var s in strs)
-            {
-                sb.AppendLine(s);
-            }
-            return RemoveControlCharacters(sb.ToString());
-        }
     }
 
     /// <summary>

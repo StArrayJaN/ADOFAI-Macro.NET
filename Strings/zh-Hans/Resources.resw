@@ -132,8 +132,8 @@
   <data name="MainWindow_EnterKeysTextBox.Text" xml:space="preserve">
     <value>请输入键位...</value>
   </data>
-  <data name="MainWindow_EnableConsoleOutputCheckBox.Content" xml:space="preserve">
-    <value>启用控制台输出</value>
+  <data name="MainWindow_ShuffleString.Content" xml:space="preserve">
+    <value>打乱键位</value>
   </data>
   <data name="MainWindow_RunMacroButton.Content" xml:space="preserve">
     <value>运行</value>
@@ -148,7 +148,7 @@
     <value>请输入键位</value>
   </data>
   <data name="MainWindow_ReadyMessage" xml:space="preserve">
-    <value>已就绪,键位数</value>
+    <value>已就绪,键位</value>
   </data>
   <data name="MainWindow_CurrentFileMessage" xml:space="preserve">
     <value>当前文件</value>
