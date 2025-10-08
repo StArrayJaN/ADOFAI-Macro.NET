@@ -15,7 +15,7 @@ namespace ADOFAI_Macro.Source.Views
     {
         private static readonly ResourceLoader _resourceLoader = new();
         private readonly GlobalKeyboardListener _keyboardListener = new();
-        private readonly ADOFAI _adofai = new();
+        public readonly ADOFAI _adofai = new();
         private string _filePath = "";
         private StartMacro? _macro;
         public ADOFAI.Level? currentLevel;
